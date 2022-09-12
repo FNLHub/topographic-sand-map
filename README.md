@@ -5,6 +5,8 @@
 ### Recommended version: 
 ```Linux Mint 19.3 Mate 64bit```
 
+#### update the date and time 
+
 ### Recommended Hardware: 
 ```Nvidia GPU```
 ```
