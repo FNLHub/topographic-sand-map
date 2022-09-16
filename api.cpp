@@ -24,8 +24,6 @@ int main() {
     int types = libfreenect2::Frame::Depth;
     libfreenect2::SyncMultiFrameListener listener(types);
     libfreenect2::FrameMap frames;
-    libfreenect2::Registration* registration = new libfreenect2::Registration(dev->getIrCameraParams(), dev->getColorCameraParams());
-    libfreenect2::Frame undistorted(512, 424, 4), registered(512, 424, 4);
     dev->setColorFrameListener(&listener);
     dev->setIrAndDepthFrameListener(&listener);
     if(!dev->startStreams(true, true)) {
@@ -45,7 +43,6 @@ int main() {
         //Get frames
         libfreenect2::Frame* depth = frames[libfreenect2::Frame::Depth];
         libfreenect2::Frame* rgb = frames[libfreenect2::Frame::Color];
-        registration->apply(rgb, depth, &undistorted, &registered);
         //Write depth data to a file
         std::ofstream file;
         file.open("depthdata.bin", std::ios::out|std::ios::binary);
