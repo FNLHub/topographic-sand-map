@@ -147,7 +147,7 @@ public class Map : MonoBehaviour
         _renderer.GetPropertyBlock(propBlock);
         propBlock.SetTexture("_MainTex", map);
         _renderer.SetPropertyBlock(propBlock);
-        byte[] bytes = File.ReadAllBytes("Assets/depthdata.bin");
+        byte[] bytes = File.ReadAllBytes("Assets/Unity/depthdata.bin");
         float[] f = new float[512*424];
         Buffer.BlockCopy(bytes,0,f,0,512*424*4);
         Color[] c = new Color[512*424];
