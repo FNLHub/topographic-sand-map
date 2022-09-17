@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+using namespace std;
 
 int main() {
     // GET DEVICE
@@ -17,19 +18,21 @@ int main() {
         std::cout << "no device connected!" << std::endl;
         return -1;
     }
-    if(serial == "") {
         serial = freenect2.getDefaultDeviceSerialNumber();
-    }
-    dev = freenect2.openDevice(serial, pipeline);
+    std::cout << "Serial Number: " << serial << std::endl;
     int types = libfreenect2::Frame::Depth;
     libfreenect2::SyncMultiFrameListener listener(types);
     libfreenect2::FrameMap frames;
+        pipeline = new libfreenect2::CpuPacketPipeline();
+    dev = freenect2.openDevice(serial, pipeline);
     dev->setColorFrameListener(&listener);
     dev->setIrAndDepthFrameListener(&listener);
     if(!dev->startStreams(true, true)) {
         std::cout << "Failed to start stream" << std::endl;
         return -1;
     }
+    libfreenect2::Registration* registration = new libfreenect2::Registration(dev->getIrCameraParams(), dev->getColorCameraParams());
+    libfreenect2::Frame undistorted(512, 424, 4), registered(512, 424, 4);
     //Log info
     std::cout << "device serial: " << dev->getSerialNumber() << std::endl;
     std::cout << "device firmware: " << dev->getFirmwareVersion() << std::endl;
@@ -40,17 +43,20 @@ int main() {
             std::cout << "timeout!" << std::endl;
             return -1;
         }
+cout << "Frame written 1" << endl;
         //Get frames
         libfreenect2::Frame* depth = frames[libfreenect2::Frame::Depth];
         libfreenect2::Frame* rgb = frames[libfreenect2::Frame::Color];
+registration->apply(rgb, depth, &undistorted, &registered);
         //Write depth data to a file
         std::ofstream file;
         file.open("depthdata.bin", std::ios::out|std::ios::binary);
-        file.write(depth->data,512*424*4);
+        file.write((char*)depth->data,512*424*4);
         file.flush();
         //Clean up
         file.close();
         listener.release(frames);
+        cout << "Frame written 2" << endl;
     }
     //Close device on exit
     dev->stop();

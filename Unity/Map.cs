@@ -29,6 +29,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Threading;
 using System.IO;
 using UnityEngine;
 
@@ -66,11 +67,13 @@ public class Map : MonoBehaviour
     Renderer _renderer;
     MaterialPropertyBlock propBlock;
     Texture2D levels;
+    Texture2D map;
     float useContour = 0.8f;
     float blurLayers = 0;
     bool rawDepth = false;
     public float baseHeight = 1000.0f;//Millimeters
     public float heightRange = 300.0f;//Millimeters
+    char mode = 'x';
     void Start()
     {
         levels = new Texture2D(10, 1);
@@ -78,10 +81,15 @@ public class Map : MonoBehaviour
         propBlock = new MaterialPropertyBlock();
         _renderer = GetComponent<Renderer>();
         _renderer.GetPropertyBlock(propBlock);
-        propBlock.SetTexture("segments", levels);
+        propBlock.SetTexture("segments", levels);  
         _renderer.SetPropertyBlock(propBlock);
         levels.SetPixels(cols[0]);
         levels.Apply();
+
+        map = new Texture2D(512,424,TextureFormat.RGBAFloat,false);
+        _renderer.GetPropertyBlock(propBlock);
+        propBlock.SetTexture("_MainTex", map);
+        _renderer.SetPropertyBlock(propBlock);
     }
     // Update is called once per frame
     void Update()
@@ -95,21 +103,21 @@ public class Map : MonoBehaviour
             Vector3 rot=transform.localRotation.eulerAngles;
             rot.z -= 10*Time.deltaTime;
             transform.localRotation = Quaternion.Euler(0,0,rot.z);
-
         }
         if(Input.GetKeyDown("=")) {
-            Vector3 rot=transform.localScale;
-            rot.x*=1.005f;
-            rot.y*=1.005f;
-            transform.localScale=rot;
+            Vector3 scal=transform.localScale;
+            if(mode=='x') scal.x*=1.005f;
+            if(mode=='y') scal.y*=1.005f;
+            transform.localScale=scal;
         }
         if(Input.GetKeyDown("-")) {
-            Vector3 rot=transform.localScale;
-            rot.x/=1.005f;
-            rot.y/=1.005f;
-            transform.localScale=rot;
-
+            Vector3 scal=transform.localScale;
+            if(mode=='x') scal.x/=1.005f;
+            if(mode=='y') scal.y/=1.005f;
+            transform.localScale=scal;
         }
+        if(Input.GetKeyDown("x")) mode='x';
+        if(Input.GetKeyDown("y")) mode='y';
         if (Input.GetKeyDown("n"))
         {
             curCols += 1;
@@ -142,12 +150,7 @@ public class Map : MonoBehaviour
         }
         Vector3 change = new Vector3(Input.GetAxis("Horizontal"),Input.GetAxis("Vertical"),0)*0.1f*Time.deltaTime;
         transform.position = transform.position + change;
-        //Load map
-        Texture2D map = new Texture2D(512,424,TextureFormat.RGBAFloat,false);
-        _renderer.GetPropertyBlock(propBlock);
-        propBlock.SetTexture("_MainTex", map);
-        _renderer.SetPropertyBlock(propBlock);
-        byte[] bytes = File.ReadAllBytes("Assets/Unity/depthdata.bin");
+byte[] bytes = File.ReadAllBytes("Assets/Unity/depthdata.bin");
         float[] f = new float[512*424];
         Buffer.BlockCopy(bytes,0,f,0,512*424*4);
         Color[] c = new Color[512*424];
