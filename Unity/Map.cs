@@ -89,6 +89,32 @@ public class Map : MonoBehaviour
         propBlock.SetVector("corner4", corner4);
 
     }
+    void OnGUI() {
+        if(Input.GetKey("h")) {
+            float screenW = Screen.width;
+            float screenH = Screen.height;
+            GUI.skin.label.fontSize=(int)(screenH/20);
+            GUI.Label(new Rect(0.0f,0.0f,screenW,screenH), @"
+                H - show help
+                C - change contour line opacity
+                B - blur layers
+                X - switch between alternative displays
+                N - change layer design
+
+                Corner manipulation:
+                Shift - increase speed
+                1234 - select corner
+                ` - select all corners
+                WASD - Move
+                R - raise base
+                F - lower base
+                T - raise max
+                F - lower max
+            ");
+
+        }
+
+    }
     void Start()
     {
         levels = new Texture2D(10, 1);
