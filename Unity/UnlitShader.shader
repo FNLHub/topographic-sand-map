@@ -68,13 +68,16 @@ Shader "Unlit/UnlitShader"
                 return o;
             }
             float4 frag (v2f i) : SV_Target {
+                //transform position based on the four corners
                 float4 pos = lerp(lerp(corner2,corner1,i.uv.x),lerp(corner4,corner3,i.uv.x),i.uv.y);
+                //Gaussian blur the sampling
                 float v = (
                     tex2D(_MainTex, pos.xy+float2(gaussSize,gaussSize)).r +
                     tex2D(_MainTex, pos.xy+float2(-gaussSize,gaussSize)).r +
                     tex2D(_MainTex, pos.xy+float2(gaussSize,-gaussSize)).r +
                     tex2D(_MainTex, pos.xy+float2(-gaussSize,-gaussSize)).r)/4;
                 v = (v-pos.z)/(pos.w-pos.z)*10;
+                //Find derivative to calculate closeness to contour line
                 float dx = ddx(v);
                 float dy = ddy(v);
                 float dv = sqrt(abs(dx*dx)+abs(dy*dy));
@@ -82,6 +85,7 @@ Shader "Unlit/UnlitShader"
                 float lineCloseness = smoothstep(1,0,clampedV/dv/lineWidth);
                 lineCloseness += smoothstep(1,0,(1-clampedV)/dv/lineWidth);
                 lineCloseness = 1-(lineCloseness*contour);
+                //Get position on color map
                 float sec = lerp((v-clampedV)/10+0.05f,v/10+0.05f,blurLayers)*bigScaleZ;
                 return lerp(tex2D(segments,float2(sec,0)),v,rawDepth)*lineCloseness;
             }

@@ -76,6 +76,7 @@ public class Map : MonoBehaviour
     public Vector4 corner3 = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
     public Vector4 corner4 = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
     int curCorner = 0;
+    //Shift corners by a linear amount
     void editCorners(Vector4 shift)
     {
         if (curCorner == 1 || curCorner == 0) corner1 += shift;
@@ -118,37 +119,44 @@ public class Map : MonoBehaviour
         if (Input.GetKeyDown("2")) curCorner = 2;
         if (Input.GetKeyDown("3")) curCorner = 3;
         if (Input.GetKeyDown("4")) curCorner = 4;
+        //Backtick selects all corners
         if (Input.GetKeyDown("`")) curCorner = 0;
+        //WASD and arrow keys translate the viewport
         if (Input.GetAxis("Horizontal") != 0.0f) editCorners(new Vector4(Input.GetAxis("Horizontal") * -0.03f * speedFactor, 0.0f, 0.0f, 0.0f));
         if (Input.GetAxis("Vertical") != 0.0f) editCorners(new Vector4(0.0f, Input.GetAxis("Vertical") * 0.03f * speedFactor, 0.0f, 0.0f));
+        //R and F control the height of the base
         if (Input.GetKey("r")) editCorners(new Vector4(0.0f, 0.0f, 0.04f * speedFactor, 0.0f));
         if (Input.GetKey("f")) editCorners(new Vector4(0.0f, 0.0f, 0.04f * -speedFactor, 0.0f));
+        //T and G control the height of the maximum
         if (Input.GetKey("t")) editCorners(new Vector4(0.0f, 0.0f, 0.0f, 0.06f * speedFactor));
         if (Input.GetKey("g")) editCorners(new Vector4(0.0f, 0.0f, 0.0f, 0.06f * -speedFactor));
 
         //Visual keys
+        //N toggles between different color maps
         if (Input.GetKeyDown("n"))
         {
             curCols = (curCols + 1) % cols.Length;
             levels.SetPixels(cols[curCols]);
             levels.Apply();
         }
+        //C cycles through different contour lines
         if (Input.GetKeyDown("c")) propBlock.SetFloat("contour", (useContour = (useContour + 0.1f) % 1.0f));
+        //B cycles through different level blur amounts
         if (Input.GetKeyDown("b")) propBlock.SetFloat("blurLayers", (blurLayers = (blurLayers + 0.1f) % 1.0f));
+        //X cycles through different debug display modes
         if (Input.GetKeyDown("x"))
         {
             debugType++;
             propBlock.SetFloat("rawDepth", (debugType % 3 == 1) ? 1.0f : 0.0f);
             propBlock.SetFloat("bigScaleZ", (debugType % 3 == 2) ? 5.0f : 1.0f);
         }
+        //Read bytes from file and convert to color map
         byte[] bytes = File.ReadAllBytes("Assets/Unity/depthdata.bin");
         float[] f = new float[512 * 424];
         Buffer.BlockCopy(bytes, 0, f, 0, 512 * 424 * 4);
         Color[] c = new Color[512 * 424];
         for (int i = 0; i < f.Length; i++)
-        {
             c[i] = new Color(f[i], f[i], f[i], 1.0f);
-        }
         //map.SetPixels(c);
         //map.Apply();
         _renderer.SetPropertyBlock(propBlock);
