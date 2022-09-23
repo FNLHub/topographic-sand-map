@@ -70,95 +70,82 @@ public class Map : MonoBehaviour
     Texture2D map;
     float useContour = 0.8f;
     float blurLayers = 0;
-    bool rawDepth = false;
-    public float baseHeight = 1000.0f;//Millimeters
-    public float heightRange = 300.0f;//Millimeters
-    char mode = 'x';
+    int debugType=0;
+    public Vector4 corner1 = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+    public Vector4 corner2 = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+    public Vector4 corner3 = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+    public Vector4 corner4 = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
+    int curCorner = 0;
+    void editCorners(Vector4 shift)
+    {
+        if (curCorner == 1 || curCorner == 0) corner1 += shift;
+        if (curCorner == 2 || curCorner == 0) corner2 += shift;
+        if (curCorner == 3 || curCorner == 0) corner3 += shift;
+        if (curCorner == 4 || curCorner == 0) corner4 += shift;
+        propBlock.SetVector("corner1", corner1);
+        propBlock.SetVector("corner2", corner2);
+        propBlock.SetVector("corner3", corner3);
+        propBlock.SetVector("corner4", corner4);
+
+    }
     void Start()
     {
         levels = new Texture2D(10, 1);
-        levels.wrapMode = TextureWrapMode.Clamp;
+        levels.wrapMode = TextureWrapMode.Repeat;
         propBlock = new MaterialPropertyBlock();
         _renderer = GetComponent<Renderer>();
         _renderer.GetPropertyBlock(propBlock);
-        propBlock.SetTexture("segments", levels);  
+        propBlock.SetTexture("segments", levels);
         _renderer.SetPropertyBlock(propBlock);
         levels.SetPixels(cols[0]);
         levels.Apply();
 
-        map = new Texture2D(512,424,TextureFormat.RGBAFloat,false);
+        map = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
         _renderer.GetPropertyBlock(propBlock);
-        propBlock.SetTexture("_MainTex", map);
+        //propBlock.SetTexture("_MainTex", map);
         _renderer.SetPropertyBlock(propBlock);
     }
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKeyDown("q")) {
-            Vector3 rot=transform.localRotation.eulerAngles;
-            rot.z += 10*Time.deltaTime;
-            transform.localRotation = Quaternion.Euler(0,0,rot.z);
-        }
-        if(Input.GetKeyDown("e")) {
-            Vector3 rot=transform.localRotation.eulerAngles;
-            rot.z -= 10*Time.deltaTime;
-            transform.localRotation = Quaternion.Euler(0,0,rot.z);
-        }
-        if(Input.GetKeyDown("=")) {
-            Vector3 scal=transform.localScale;
-            if(mode=='x') scal.x*=1.005f;
-            if(mode=='y') scal.y*=1.005f;
-            transform.localScale=scal;
-        }
-        if(Input.GetKeyDown("-")) {
-            Vector3 scal=transform.localScale;
-            if(mode=='x') scal.x/=1.005f;
-            if(mode=='y') scal.y/=1.005f;
-            transform.localScale=scal;
-        }
-        if(Input.GetKeyDown("x")) mode='x';
-        if(Input.GetKeyDown("y")) mode='y';
+        propBlock = new MaterialPropertyBlock();
+        _renderer.GetPropertyBlock(propBlock);
+        _renderer.GetPropertyBlock(propBlock);
+        //Corner control keys
+        if (Input.GetKeyDown("1")) curCorner = 1;
+        if (Input.GetKeyDown("2")) curCorner = 2;
+        if (Input.GetKeyDown("3")) curCorner = 3;
+        if (Input.GetKeyDown("4")) curCorner = 4;
+        if (Input.GetKeyDown("`")) curCorner = 0;
+        if (Input.GetAxis("Horizontal") != 0.0f) editCorners(new Vector4(Input.GetAxis("Horizontal") * -0.03f * Time.deltaTime, 0.0f, 0.0f, 0.0f));
+        if (Input.GetAxis("Vertical") != 0.0f) editCorners(new Vector4(0.0f, Input.GetAxis("Vertical") * 0.03f * Time.deltaTime, 0.0f, 0.0f));
+        if (Input.GetKey("r")) editCorners(new Vector4(0.0f, 0.0f, 0.04f * Time.deltaTime, 0.0f));
+        if (Input.GetKey("f")) editCorners(new Vector4(0.0f, 0.0f, 0.04f * -Time.deltaTime, 0.0f));
+
+        //Visual keys
         if (Input.GetKeyDown("n"))
         {
-            curCols += 1;
-            if (curCols == cols.Length) curCols = 0;
+            curCols = (curCols + 1) % cols.Length;
             levels.SetPixels(cols[curCols]);
             levels.Apply();
         }
-        if (Input.GetKeyDown("c"))
+        if (Input.GetKeyDown("c")) propBlock.SetFloat("contour", (useContour = (useContour + 0.1f) % 1.0f));
+        if (Input.GetKeyDown("b")) propBlock.SetFloat("blurLayers", (blurLayers = (blurLayers + 0.1f) % 1.0f));
+        if (Input.GetKeyDown("t")) {
+            debugType++;
+            propBlock.SetFloat("rawDepth", (debugType%3 == 1) ? 1.0f : 0.0f);
+            propBlock.SetFloat("bigScaleZ", (debugType%3 == 2) ? 5.0f : 1.0f);
+        }
+        byte[] bytes = File.ReadAllBytes("Assets/Unity/depthdata.bin");
+        float[] f = new float[512 * 424];
+        Buffer.BlockCopy(bytes, 0, f, 0, 512 * 424 * 4);
+        Color[] c = new Color[512 * 424];
+        for (int i = 0; i < f.Length; i++)
         {
-            useContour += 0.1f;
-            if (useContour >= 1.0f) useContour -= 1.0f;
-            _renderer.GetPropertyBlock(propBlock);
-            propBlock.SetFloat("contour", useContour);
-            _renderer.SetPropertyBlock(propBlock);
+            c[i] = new Color(f[i], f[i], f[i], 1.0f);
         }
-        if (Input.GetKeyDown("b"))
-        {
-            blurLayers += 0.1f;
-            if (blurLayers >= 1.0f) blurLayers -= 1.0f;
-            _renderer.GetPropertyBlock(propBlock);
-            propBlock.SetFloat("blurLayers", blurLayers);
-            _renderer.SetPropertyBlock(propBlock);
-        }
-        if (Input.GetKeyDown("r"))
-        {
-            rawDepth = !rawDepth;
-            _renderer.GetPropertyBlock(propBlock);
-            propBlock.SetFloat("rawDepth", rawDepth ? 1.0f : 0.0f);
-            _renderer.SetPropertyBlock(propBlock);
-        }
-        Vector3 change = new Vector3(Input.GetAxis("Horizontal"),Input.GetAxis("Vertical"),0)*0.1f*Time.deltaTime;
-        transform.position = transform.position + change;
-byte[] bytes = File.ReadAllBytes("Assets/Unity/depthdata.bin");
-        float[] f = new float[512*424];
-        Buffer.BlockCopy(bytes,0,f,0,512*424*4);
-        Color[] c = new Color[512*424];
-        for(int i=0;i<f.Length;i++) {
-            float col = (baseHeight-f[i])/heightRange;
-            c[i] = new Color(col,col,col,1.0f);
-        }
-        map.SetPixels(c);
-        map.Apply();
+        //map.SetPixels(c);
+        //map.Apply();
+        _renderer.SetPropertyBlock(propBlock);
     }
 }
