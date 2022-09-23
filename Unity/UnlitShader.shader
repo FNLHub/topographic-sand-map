@@ -9,12 +9,13 @@ Shader "Unlit/UnlitShader"
         blurLayers ("Blur Layers", Float) = 0
         rawDepth ("Raw depth",Float) = 0
         bigScaleZ ("BigScaleZ",Float) = 1
+        gaussSize("Gaussian Blur Scale",Float)=0.003
 
         heightRange("Height Range",float) = 100
-        corner1("Corner 1",Vector) = (0,0,100,0)
-        corner2("Corner 2",Vector) = (1,0,100,0)
-        corner3("Corner 3",Vector) = (0,1,100,0)
-        corner4("Corner 4",Vector) = (1,1,100,0)
+        corner1("Corner 1",Vector) = (0,0,0,1)
+        corner2("Corner 2",Vector) = (1,0,0,1)
+        corner3("Corner 3",Vector) = (0,1,0,1)
+        corner4("Corner 4",Vector) = (1,1,0,1)
     }
     SubShader
     {
@@ -51,6 +52,7 @@ Shader "Unlit/UnlitShader"
             float contour;
             float rawDepth;
             float bigScaleZ;
+            float gaussSize;
 
             float heightRange;
             float4 corner1;
@@ -67,8 +69,12 @@ Shader "Unlit/UnlitShader"
             }
             float4 frag (v2f i) : SV_Target {
                 float4 pos = lerp(lerp(corner2,corner1,i.uv.x),lerp(corner4,corner3,i.uv.x),i.uv.y);
-                float v = tex2D(_MainTex, pos.xy).r;
-                v = (v-pos.z)*heightRange;
+                float v = (
+                    tex2D(_MainTex, pos.xy+float2(gaussSize,gaussSize)).r +
+                    tex2D(_MainTex, pos.xy+float2(-gaussSize,gaussSize)).r +
+                    tex2D(_MainTex, pos.xy+float2(gaussSize,-gaussSize)).r +
+                    tex2D(_MainTex, pos.xy+float2(-gaussSize,-gaussSize)).r)/4;
+                v = (v-pos.z)/(pos.w-pos.z)*10;
                 float dx = ddx(v);
                 float dy = ddy(v);
                 float dv = sqrt(abs(dx*dx)+abs(dy*dy));
@@ -77,7 +83,7 @@ Shader "Unlit/UnlitShader"
                 lineCloseness += smoothstep(1,0,(1-clampedV)/dv/lineWidth);
                 lineCloseness = 1-(lineCloseness*contour);
                 float sec = lerp((v-clampedV)/10+0.05f,v/10+0.05f,blurLayers)*bigScaleZ;
-                return lerp(tex2D(segments,float2(sec,0)),v/heightRange,rawDepth)*lineCloseness;
+                return lerp(tex2D(segments,float2(sec,0)),v,rawDepth)*lineCloseness;
             }
             ENDCG
         }

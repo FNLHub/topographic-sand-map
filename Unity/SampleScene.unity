@@ -303,8 +303,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1136a0d6efaa2a4429f9c335afcb0315, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  corner1: {x: 0, y: 0, z: 0, w: 0}
-  corner2: {x: 1, y: 0, z: 0, w: 0}
-  corner3: {x: 0, y: 1, z: 0, w: 0}
-  corner4: {x: 1, y: 1, z: 0, w: 0}
-  heightRange: 143.4
+  corner1: {x: 0, y: 0, z: 0, w: 1}
+  corner2: {x: 1, y: 0, z: 0, w: 1}
+  corner3: {x: 0, y: 1, z: 0, w: 1}
+  corner4: {x: 1, y: 1, z: 0, w: 1}

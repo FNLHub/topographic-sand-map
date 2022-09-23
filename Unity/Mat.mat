@@ -57,7 +57,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - segments:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 43ed4593c5ddda0439fcc1bdaf8309fe, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -78,17 +78,20 @@ Material:
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
-    - blurLayers: 0.33
-    - contour: 0.93
-    - heightRange: 0.12
+    - bigScaleZ: 1
+    - blurLayers: 1
+    - contour: 0.8
+    - debugMode: 0
+    - gaussSize: 0.001
+    - heightRange: 4.73
     - lineCount: 9.79
-    - lineWidth: 2.69
+    - lineWidth: 2.36
     - rawDepth: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - corner1: {r: 0, g: 0, b: 0, a: 0}
-    - corner2: {r: 0, g: 1, b: 0, a: 0}
-    - corner3: {r: 1, g: 0, b: 0, a: 0}
-    - corner4: {r: 1, g: 1, b: 0, a: 0}
+    - corner1: {r: 0, g: 0, b: 0, a: 1}
+    - corner2: {r: 1, g: 0, b: 0, a: 1}
+    - corner3: {r: 0, g: 1, b: 0, a: 1}
+    - corner4: {r: 1, g: 1, b: 0, a: 1}
   m_BuildTextureStacks: []

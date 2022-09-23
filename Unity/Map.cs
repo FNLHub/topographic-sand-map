@@ -70,7 +70,7 @@ public class Map : MonoBehaviour
     Texture2D map;
     float useContour = 0.8f;
     float blurLayers = 0;
-    int debugType=0;
+    int debugType = 0;
     public Vector4 corner1 = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
     public Vector4 corner2 = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
     public Vector4 corner3 = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
@@ -108,6 +108,8 @@ public class Map : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        float speedFactor = Time.deltaTime;
+        if (Input.GetKey("left shift")) speedFactor *= 10;
         propBlock = new MaterialPropertyBlock();
         _renderer.GetPropertyBlock(propBlock);
         _renderer.GetPropertyBlock(propBlock);
@@ -117,10 +119,12 @@ public class Map : MonoBehaviour
         if (Input.GetKeyDown("3")) curCorner = 3;
         if (Input.GetKeyDown("4")) curCorner = 4;
         if (Input.GetKeyDown("`")) curCorner = 0;
-        if (Input.GetAxis("Horizontal") != 0.0f) editCorners(new Vector4(Input.GetAxis("Horizontal") * -0.03f * Time.deltaTime, 0.0f, 0.0f, 0.0f));
-        if (Input.GetAxis("Vertical") != 0.0f) editCorners(new Vector4(0.0f, Input.GetAxis("Vertical") * 0.03f * Time.deltaTime, 0.0f, 0.0f));
-        if (Input.GetKey("r")) editCorners(new Vector4(0.0f, 0.0f, 0.04f * Time.deltaTime, 0.0f));
-        if (Input.GetKey("f")) editCorners(new Vector4(0.0f, 0.0f, 0.04f * -Time.deltaTime, 0.0f));
+        if (Input.GetAxis("Horizontal") != 0.0f) editCorners(new Vector4(Input.GetAxis("Horizontal") * -0.03f * speedFactor, 0.0f, 0.0f, 0.0f));
+        if (Input.GetAxis("Vertical") != 0.0f) editCorners(new Vector4(0.0f, Input.GetAxis("Vertical") * 0.03f * speedFactor, 0.0f, 0.0f));
+        if (Input.GetKey("r")) editCorners(new Vector4(0.0f, 0.0f, 0.04f * speedFactor, 0.0f));
+        if (Input.GetKey("f")) editCorners(new Vector4(0.0f, 0.0f, 0.04f * -speedFactor, 0.0f));
+        if (Input.GetKey("t")) editCorners(new Vector4(0.0f, 0.0f, 0.0f, 0.06f * speedFactor));
+        if (Input.GetKey("g")) editCorners(new Vector4(0.0f, 0.0f, 0.0f, 0.06f * -speedFactor));
 
         //Visual keys
         if (Input.GetKeyDown("n"))
@@ -131,10 +135,11 @@ public class Map : MonoBehaviour
         }
         if (Input.GetKeyDown("c")) propBlock.SetFloat("contour", (useContour = (useContour + 0.1f) % 1.0f));
         if (Input.GetKeyDown("b")) propBlock.SetFloat("blurLayers", (blurLayers = (blurLayers + 0.1f) % 1.0f));
-        if (Input.GetKeyDown("t")) {
+        if (Input.GetKeyDown("x"))
+        {
             debugType++;
-            propBlock.SetFloat("rawDepth", (debugType%3 == 1) ? 1.0f : 0.0f);
-            propBlock.SetFloat("bigScaleZ", (debugType%3 == 2) ? 5.0f : 1.0f);
+            propBlock.SetFloat("rawDepth", (debugType % 3 == 1) ? 1.0f : 0.0f);
+            propBlock.SetFloat("bigScaleZ", (debugType % 3 == 2) ? 5.0f : 1.0f);
         }
         byte[] bytes = File.ReadAllBytes("Assets/Unity/depthdata.bin");
         float[] f = new float[512 * 424];
