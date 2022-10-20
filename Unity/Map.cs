@@ -10,21 +10,7 @@
         = (+) - Zoom in
         -     - Zoom out
 
-
-
-
-
-
-
-
-
-
 **/
-
-
-
-
-
 
 using System.Collections;
 using System.Collections.Generic;
@@ -32,6 +18,7 @@ using System;
 using System.Threading;
 using System.IO;
 using UnityEngine;
+using Windows.Kinect;
 
 public class Map : MonoBehaviour
 {
@@ -63,7 +50,11 @@ public class Map : MonoBehaviour
         }
     };
     int curCols = 0;
-    // Start is called before the first frame update
+
+    private KinectSensor _Sensor;
+    private DepthFrameReader _Reader;
+    private ushort[] _Data;
+
     Renderer _renderer;
     MaterialPropertyBlock propBlock;
     Texture2D levels;
@@ -71,13 +62,13 @@ public class Map : MonoBehaviour
     float useContour = 0.8f;
     float blurLayers = 0;
     int debugType = 0;
-    public Vector4 corner1 = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
-    public Vector4 corner2 = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-    public Vector4 corner3 = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-    public Vector4 corner4 = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
+    public UnityEngine.Vector4 corner1 = new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+    public UnityEngine.Vector4 corner2 = new UnityEngine.Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+    public UnityEngine.Vector4 corner3 = new UnityEngine.Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+    public UnityEngine.Vector4 corner4 = new UnityEngine.Vector4(1.0f, 1.0f, 0.0f, 1.0f);
     int curCorner = 0;
     //Shift corners by a linear amount
-    void editCorners(Vector4 shift)
+    void editCorners(UnityEngine.Vector4 shift)
     {
         if (curCorner == 1 || curCorner == 0) corner1 += shift;
         if (curCorner == 2 || curCorner == 0) corner2 += shift;
@@ -89,12 +80,14 @@ public class Map : MonoBehaviour
         propBlock.SetVector("corner4", corner4);
 
     }
-    void OnGUI() {
-        if(Input.GetKey("h")) {
+    void OnGUI()
+    {
+        if (Input.GetKey("h"))
+        {
             float screenW = Screen.width;
             float screenH = Screen.height;
-            GUI.skin.label.fontSize=(int)(screenH/20);
-            GUI.Label(new Rect(0.0f,0.0f,screenW,screenH), @"
+            GUI.skin.label.fontSize = (int)(screenH / 20);
+            GUI.Label(new Rect(0.0f, 0.0f, screenW, screenH), @"
                 H - show help
                 C - change contour line opacity
                 B - blur layers
@@ -117,6 +110,18 @@ public class Map : MonoBehaviour
     }
     void Start()
     {
+        _Sensor = KinectSensor.GetDefault();
+        if (_Sensor != null)
+        {
+            _Sensor.Open();
+            _Reader = _Sensor.DepthFrameSource.OpenReader();
+            _Data = new ushort[_Sensor.DepthFrameSource.FrameDescription.LengthInPixels];
+            Debug.Log("camera found");
+        }
+        else
+        {
+            Debug.Log("Camera not found");
+        }
         levels = new Texture2D(10, 1);
         levels.wrapMode = TextureWrapMode.Repeat;
         propBlock = new MaterialPropertyBlock();
@@ -129,7 +134,7 @@ public class Map : MonoBehaviour
 
         map = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
         _renderer.GetPropertyBlock(propBlock);
-        //propBlock.SetTexture("_MainTex", map);
+        propBlock.SetTexture("_MainTex", map);
         _renderer.SetPropertyBlock(propBlock);
     }
     // Update is called once per frame
@@ -148,14 +153,14 @@ public class Map : MonoBehaviour
         //Backtick selects all corners
         if (Input.GetKeyDown("`")) curCorner = 0;
         //WASD and arrow keys translate the viewport
-        if (Input.GetAxis("Horizontal") != 0.0f) editCorners(new Vector4(Input.GetAxis("Horizontal") * -0.03f * speedFactor, 0.0f, 0.0f, 0.0f));
-        if (Input.GetAxis("Vertical") != 0.0f) editCorners(new Vector4(0.0f, Input.GetAxis("Vertical") * 0.03f * speedFactor, 0.0f, 0.0f));
+        if (Input.GetAxis("Horizontal") != 0.0f) editCorners(new UnityEngine.Vector4(Input.GetAxis("Horizontal") * -0.03f * speedFactor, 0.0f, 0.0f, 0.0f));
+        if (Input.GetAxis("Vertical") != 0.0f) editCorners(new UnityEngine.Vector4(0.0f, Input.GetAxis("Vertical") * 0.03f * speedFactor, 0.0f, 0.0f));
         //R and F control the height of the base
-        if (Input.GetKey("r")) editCorners(new Vector4(0.0f, 0.0f, 0.04f * speedFactor, 0.0f));
-        if (Input.GetKey("f")) editCorners(new Vector4(0.0f, 0.0f, 0.04f * -speedFactor, 0.0f));
+        if (Input.GetKey("r")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.04f * speedFactor, 0.0f));
+        if (Input.GetKey("f")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.04f * -speedFactor, 0.0f));
         //T and G control the height of the maximum
-        if (Input.GetKey("t")) editCorners(new Vector4(0.0f, 0.0f, 0.0f, 0.06f * speedFactor));
-        if (Input.GetKey("g")) editCorners(new Vector4(0.0f, 0.0f, 0.0f, 0.06f * -speedFactor));
+        if (Input.GetKey("t")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 0.06f * speedFactor));
+        if (Input.GetKey("g")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 0.06f * -speedFactor));
 
         //Visual keys
         //N toggles between different color maps
@@ -166,9 +171,9 @@ public class Map : MonoBehaviour
             levels.Apply();
         }
         //C cycles through different contour lines
-        if (Input.GetKeyDown("c")) propBlock.SetFloat("contour", (useContour = (useContour + 0.1f) % 1.0f));
+        if (Input.GetKeyDown("c")) propBlock.SetFloat("contour", (useContour = (useContour + 0.1f) % 1.1f));
         //B cycles through different level blur amounts
-        if (Input.GetKeyDown("b")) propBlock.SetFloat("blurLayers", (blurLayers = (blurLayers + 0.1f) % 1.0f));
+        if (Input.GetKeyDown("b")) propBlock.SetFloat("blurLayers", (blurLayers = (blurLayers + 0.1f) % 1.1f));
         //X cycles through different debug display modes
         if (Input.GetKeyDown("x"))
         {
@@ -176,15 +181,42 @@ public class Map : MonoBehaviour
             propBlock.SetFloat("rawDepth", (debugType % 3 == 1) ? 1.0f : 0.0f);
             propBlock.SetFloat("bigScaleZ", (debugType % 3 == 2) ? 5.0f : 1.0f);
         }
-        //Read bytes from file and convert to color map
-        byte[] bytes = File.ReadAllBytes("Assets/Unity/depthdata.bin");
-        float[] f = new float[512 * 424];
-        Buffer.BlockCopy(bytes, 0, f, 0, 512 * 424 * 4);
-        Color[] c = new Color[512 * 424];
-        for (int i = 0; i < f.Length; i++)
-            c[i] = new Color(f[i], f[i], f[i], 1.0f);
-        //map.SetPixels(c);
-        //map.Apply();
         _renderer.SetPropertyBlock(propBlock);
+        if (_Reader != null)
+        {
+            var frame = _Reader.AcquireLatestFrame();
+            if (frame != null)
+            {
+                frame.CopyFrameDataToArray(_Data);
+
+                var frameDesc = _Sensor.DepthFrameSource.FrameDescription;
+                Color[] colors = new Color[frameDesc.Width * frameDesc.Height];
+                for (int i = 0; i < frameDesc.Width * frameDesc.Height; i++)
+                {
+                    float d = 1.0f-_Data[i]/500f;
+                    colors[i] = new Color(d,d,d,1.0f);
+                }
+                map.SetPixels(colors);
+                map.Apply();
+                frame.Dispose();
+                frame = null;
+            }
+        }
+    }
+
+
+    void OnApplicationQuit()
+    {
+        if (_Reader != null)
+        {
+            _Reader.Dispose();
+            _Reader = null;
+        }
+        if (_Sensor != null)
+        {
+            if (_Sensor.IsOpen)
+                _Sensor.Close();
+            _Sensor = null;
+        }
     }
 }

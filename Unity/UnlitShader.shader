@@ -9,7 +9,6 @@ Shader "Unlit/UnlitShader"
         blurLayers ("Blur Layers", Float) = 0
         rawDepth ("Raw depth",Float) = 0
         bigScaleZ ("BigScaleZ",Float) = 1
-        gaussSize("Gaussian Blur Scale",Float)=0.003
 
         heightRange("Height Range",float) = 100
         corner1("Corner 1",Vector) = (0,0,0,1)
@@ -71,11 +70,7 @@ Shader "Unlit/UnlitShader"
                 //transform position based on the four corners
                 float4 pos = lerp(lerp(corner2,corner1,i.uv.x),lerp(corner4,corner3,i.uv.x),i.uv.y);
                 //Gaussian blur the sampling
-                float v = (
-                    tex2D(_MainTex, pos.xy+float2(gaussSize,gaussSize)).r +
-                    tex2D(_MainTex, pos.xy+float2(-gaussSize,gaussSize)).r +
-                    tex2D(_MainTex, pos.xy+float2(gaussSize,-gaussSize)).r +
-                    tex2D(_MainTex, pos.xy+float2(-gaussSize,-gaussSize)).r)/4;
+                float v = tex2D(_MainTex, pos.xy).r;
                 v = (v-pos.z)/(pos.w-pos.z)*10;
                 //Find derivative to calculate closeness to contour line
                 float dx = ddx(v);
