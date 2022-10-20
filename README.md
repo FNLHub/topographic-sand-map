@@ -6,4 +6,6 @@ This is a work in progress project by a team at Friday Night Lab in College of t
 
 Our goal is to write a different program that directly uses depth data from the Kinect (which would be at 30 frames per second) using Unity and shaders.
 
+The current version of the Unity install can be read here: [Unity Topo Sand Map Installation](Unity.md).
+
 
