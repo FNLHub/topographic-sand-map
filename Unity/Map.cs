@@ -58,7 +58,8 @@ public class Map : MonoBehaviour
     Renderer _renderer;
     MaterialPropertyBlock propBlock;
     Texture2D levels;
-    Texture2D map;
+    Texture2D[] maps;
+    int mapIndex = 0;
     float useContour = 0.8f;
     float blurLayers = 0;
     int debugType = 0;
@@ -127,25 +128,54 @@ public class Map : MonoBehaviour
         propBlock = new MaterialPropertyBlock();
         _renderer = GetComponent<Renderer>();
         _renderer.GetPropertyBlock(propBlock);
+
         propBlock.SetTexture("segments", levels);
-        _renderer.SetPropertyBlock(propBlock);
         levels.SetPixels(cols[0]);
         levels.Apply();
 
-        map = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
-        _renderer.GetPropertyBlock(propBlock);
-        propBlock.SetTexture("_MainTex", map);
-        editCorners(UnityEngine.Vector4(0.0f,0.0f,0.0f,0.0f));
+        maps = new Texture2D[3];
+        maps[0] = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
+        maps[1] = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
+        maps[2] = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
+        propBlock.SetTexture("tex0", maps[0]);
+        propBlock.SetTexture("tex1", maps[1]);
+        propBlock.SetTexture("tex2", maps[2]);
+        editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+
         _renderer.SetPropertyBlock(propBlock);
     }
     // Update is called once per frame
     void Update()
     {
-        float speedFactor = Time.deltaTime;
-        if (Input.GetKey("left shift")) speedFactor *= 10;
         propBlock = new MaterialPropertyBlock();
         _renderer.GetPropertyBlock(propBlock);
-        _renderer.GetPropertyBlock(propBlock);
+        KeyInput();
+        if (_Reader != null)
+        {
+            var frame = _Reader.AcquireLatestFrame();
+            if (frame != null)
+            {
+                frame.CopyFrameDataToArray(_Data);
+
+                var frameDesc = _Sensor.DepthFrameSource.FrameDescription;
+                Color[] colors = new Color[frameDesc.Width * frameDesc.Height];
+                for (int i = 0; i < frameDesc.Width * frameDesc.Height; i++)
+                {
+                    float d = 1.0f - _Data[i] / 500f;
+                    colors[i] = new Color(d, d, d, 1.0f);
+                }
+                map[mapIndex].SetPixels(colors);
+                map[mapIndex].Apply();
+                mapIndex = (mapIndex + 1) % 3;
+                frame.Dispose();
+                frame = null;
+            }
+        }
+        _renderer.SetPropertyBlock(propBlock);
+    }
+    void KeyInput() {
+        float speedFactor = Time.deltaTime;
+        if (Input.GetKey("left shift")) speedFactor *= 10;
         //Corner control keys
         if (Input.GetKeyDown("1")) curCorner = 1;
         if (Input.GetKeyDown("2")) curCorner = 2;
@@ -182,29 +212,8 @@ public class Map : MonoBehaviour
             propBlock.SetFloat("rawDepth", (debugType % 3 == 1) ? 1.0f : 0.0f);
             propBlock.SetFloat("bigScaleZ", (debugType % 3 == 2) ? 5.0f : 1.0f);
         }
-        _renderer.SetPropertyBlock(propBlock);
-        if (_Reader != null)
-        {
-            var frame = _Reader.AcquireLatestFrame();
-            if (frame != null)
-            {
-                frame.CopyFrameDataToArray(_Data);
 
-                var frameDesc = _Sensor.DepthFrameSource.FrameDescription;
-                Color[] colors = new Color[frameDesc.Width * frameDesc.Height];
-                for (int i = 0; i < frameDesc.Width * frameDesc.Height; i++)
-                {
-                    float d = 1.0f-_Data[i]/500f;
-                    colors[i] = new Color(d,d,d,1.0f);
-                }
-                map.SetPixels(colors);
-                map.Apply();
-                frame.Dispose();
-                frame = null;
-            }
-        }
     }
-
 
     void OnApplicationQuit()
     {

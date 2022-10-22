@@ -2,7 +2,9 @@ Shader "Unlit/UnlitShader"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
+        tex0 ("Texture 0", 2D) = "white" {}
+        tex1 ("Texture 1", 2D) = "white" {}
+        tex2 ("Texture 2", 2D) = "white" {}
         segments ("Height colors", 2D) = "white" {}
         lineWidth ("Line Width", Float) = 10
         contour ("Contour Intensity", Float) = 1
@@ -42,8 +44,9 @@ Shader "Unlit/UnlitShader"
                 float4 vertex : SV_POSITION;
             };
 
-            sampler2D _MainTex;
-            float4 _MainTex_ST;
+            sampler2D tex0;
+            sampler2D tex1;
+            sampler2D tex2;
 
             sampler2D segments;
             float lineWidth;
@@ -62,15 +65,15 @@ Shader "Unlit/UnlitShader"
             v2f vert (appdata v) {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-                UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
             }
             float4 frag (v2f i) : SV_Target {
                 //transform position based on the four corners
                 float4 pos = lerp(lerp(corner2,corner1,i.uv.x),lerp(corner4,corner3,i.uv.x),i.uv.y);
                 //Gaussian blur the sampling
-                float v = tex2D(_MainTex, pos.xy).r;
+                float v = (tex2D(tex0, pos.xy).r
+                    + tex2D(tex1, pos.xy).r
+                    + tex2D(tex2, pos.xy).r)/3.0;
                 v = (v-pos.z)/(pos.w-pos.z)*10;
                 //Find derivative to calculate closeness to contour line
                 float dx = ddx(v);
