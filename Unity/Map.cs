@@ -103,7 +103,7 @@ public class Map : MonoBehaviour
                 R - raise base
                 F - lower base
                 T - raise max
-                F - lower max
+                G - lower max
             ");
 
         }
