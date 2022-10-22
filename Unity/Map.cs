@@ -135,6 +135,7 @@ public class Map : MonoBehaviour
         map = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
         _renderer.GetPropertyBlock(propBlock);
         propBlock.SetTexture("_MainTex", map);
+        editCorners(UnityEngine.Vector4(0.0f,0.0f,0.0f,0.0f));
         _renderer.SetPropertyBlock(propBlock);
     }
     // Update is called once per frame

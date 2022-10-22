@@ -80,9 +80,9 @@ Material:
     - _ZWrite: 1
     - bigScaleZ: 1
     - blurLayers: 1
-    - contour: 0.8
+    - contour: 2.01
     - debugMode: 0
-    - gaussSize: 0.001
+    - gaussSize: 0
     - heightRange: 4.73
     - lineCount: 9.79
     - lineWidth: 2.36
