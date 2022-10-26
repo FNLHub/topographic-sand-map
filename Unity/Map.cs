@@ -51,15 +51,23 @@ public class Map : MonoBehaviour
     };
     int curCols = 0;
 
+    //Data reading
     private KinectSensor _Sensor;
     private DepthFrameReader _Reader;
     private ushort[] _Data;
 
+    //Prettify compute shader
+    public int computeKernel;
+    RenderTexture prettifyInput;
+    RenderTexture prettifyOld;
+    RenderTexture prettifyOutput;
+    public ComputeShader computeShader;
+
+
     Renderer _renderer;
     MaterialPropertyBlock propBlock;
     Texture2D levels;
-    Texture2D[] maps;
-    int mapIndex = 0;
+    Texture2D map;
     float useContour = 0.8f;
     float blurLayers = 0;
     int debugType = 0;
@@ -109,8 +117,16 @@ public class Map : MonoBehaviour
         }
 
     }
+    RenderTexture create_rt(string name)
+    {
+        RenderTexture output = new RenderTexture(512, 424, sizeof(float) * 4, RenderTextureFormat.ARGBFloat);
+        output.enableRandomWrite = true;
+        output.Create();
+        return output;
+    }
     void Start()
     {
+        //Sensors
         _Sensor = KinectSensor.GetDefault();
         if (_Sensor != null)
         {
@@ -123,6 +139,17 @@ public class Map : MonoBehaviour
         {
             Debug.Log("Camera not found");
         }
+
+        //Prettify compute shader
+        computeKernel = computeShader.FindKernel("Pretty");
+        prettifyInput = create_rt("Input");
+        prettifyOld = create_rt("Old");
+        prettifyOutput = create_rt("Result");
+        computeShader.SetTexture(computeKernel, "Input", prettifyInput);
+        computeShader.SetTexture(computeKernel, "Old", prettifyOld);
+        computeShader.SetTexture(computeKernel, "Result", prettifyOutput);
+
+        //Shader renderer
         levels = new Texture2D(10, 1);
         levels.wrapMode = TextureWrapMode.Repeat;
         propBlock = new MaterialPropertyBlock();
@@ -130,16 +157,11 @@ public class Map : MonoBehaviour
         _renderer.GetPropertyBlock(propBlock);
 
         propBlock.SetTexture("segments", levels);
+        map = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
+        propBlock.SetTexture("tex", map);
         levels.SetPixels(cols[0]);
         levels.Apply();
 
-        maps = new Texture2D[3];
-        maps[0] = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
-        maps[1] = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
-        maps[2] = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
-        propBlock.SetTexture("tex0", maps[0]);
-        propBlock.SetTexture("tex1", maps[1]);
-        propBlock.SetTexture("tex2", maps[2]);
         editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 0.0f));
 
         _renderer.SetPropertyBlock(propBlock);
@@ -164,16 +186,21 @@ public class Map : MonoBehaviour
                     float d = 1.0f - _Data[i] / 500f;
                     colors[i] = new Color(d, d, d, 1.0f);
                 }
-                map[mapIndex].SetPixels(colors);
-                map[mapIndex].Apply();
-                mapIndex = (mapIndex + 1) % 3;
+                map.SetPixels(colors);
+                map.Apply();
+                Graphics.Blit(map, prettifyInput);
+                computeShader.Dispatch(computeKernel, 512 / 8, 424 / 8, 1);
+                RenderTexture.active = prettifyOutput;
+                Graphics.CopyTexture(prettifyOutput, map);
+                map.Apply();
                 frame.Dispose();
                 frame = null;
             }
         }
         _renderer.SetPropertyBlock(propBlock);
     }
-    void KeyInput() {
+    void KeyInput()
+    {
         float speedFactor = Time.deltaTime;
         if (Input.GetKey("left shift")) speedFactor *= 10;
         //Corner control keys

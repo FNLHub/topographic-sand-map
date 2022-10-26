@@ -1,0 +1,32 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel Pretty
+#pragma kernel time_interpolate
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+RWTexture2D<float4> Input;
+RWTexture2D<float4> Old;
+int max_x = 512;
+int max_y = 424;
+
+[numthreads(8,8,1)]
+void Pretty (uint3 id : SV_DispatchThreadID)
+{
+    int2 pos = id.xy;
+    //Gaussianish blur
+    Result[pos] =
+        Input[pos+int2(-1,-1)] * 0.0947 +
+        Input[pos+int2(1,-1)] * 0.0947 +
+        Input[pos+int2(-1,1)] * 0.0947 +
+        Input[pos+int2(1,1)] * 0.0947 +
+        Input[pos+int2(0,-1)] * 0.118 +
+        Input[pos+int2(0,1)] * 0.118 +
+        Input[pos+int2(-1,0)] * 0.118 +
+        Input[pos+int2(1,0)] * 0.118 +
+        Input[pos+int2(-1,-1)] * 0.118 +
+        Input[pos]*0.01;
+    float4 old = Old[pos];
+    Old[pos]=Result[pos];
+    Result[pos] = Result[pos]*0.5+old*0.5;
+}

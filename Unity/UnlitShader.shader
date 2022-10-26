@@ -2,9 +2,7 @@ Shader "Unlit/UnlitShader"
 {
     Properties
     {
-        tex0 ("Texture 0", 2D) = "white" {}
-        tex1 ("Texture 1", 2D) = "white" {}
-        tex2 ("Texture 2", 2D) = "white" {}
+        tex ("Texture", 2D) = "white" {}
         segments ("Height colors", 2D) = "white" {}
         lineWidth ("Line Width", Float) = 10
         contour ("Contour Intensity", Float) = 1
@@ -44,9 +42,7 @@ Shader "Unlit/UnlitShader"
                 float4 vertex : SV_POSITION;
             };
 
-            sampler2D tex0;
-            sampler2D tex1;
-            sampler2D tex2;
+            sampler2D tex;
 
             sampler2D segments;
             float lineWidth;
@@ -64,6 +60,7 @@ Shader "Unlit/UnlitShader"
 
             v2f vert (appdata v) {
                 v2f o;
+                o.uv = v.uv;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 return o;
             }
@@ -71,21 +68,16 @@ Shader "Unlit/UnlitShader"
                 //transform position based on the four corners
                 float4 pos = lerp(lerp(corner2,corner1,i.uv.x),lerp(corner4,corner3,i.uv.x),i.uv.y);
                 //Gaussian blur the sampling
-                float v = (tex2D(tex0, pos.xy).r
-                    + tex2D(tex1, pos.xy).r
-                    + tex2D(tex2, pos.xy).r)/3.0;
+                float v = tex2D(tex, pos.xy).r;
                 v = (v-pos.z)/(pos.w-pos.z)*10;
                 //Find derivative to calculate closeness to contour line
                 float dx = ddx(v);
                 float dy = ddy(v);
                 float dv = sqrt(abs(dx*dx)+abs(dy*dy));
-                float clampedV = frac(v);
-                float lineCloseness = smoothstep(1,0,clampedV/dv/lineWidth);
-                lineCloseness += smoothstep(1,0,(1-clampedV)/dv/lineWidth);
-                lineCloseness = 1-(lineCloseness*contour);
+                float lineCloseness = smoothstep(0,1,frac(v)/sqrt(abs(dx*dx)+abs(dy*dy))/lineWidth);
                 //Get position on color map
-                float sec = lerp((v-clampedV)/10+0.05f,v/10+0.05f,blurLayers)*bigScaleZ;
-                return lerp(tex2D(segments,float2(sec,0)),v,rawDepth)*lineCloseness;
+                float sec = lerp((v-frac(v))/10+0.05f,v/10+0.05f,blurLayers)*bigScaleZ;
+                return lerp(tex2D(segments,float2(sec,0)),v/10.0f+1.0f,rawDepth)*lineCloseness;
             }
             ENDCG
         }
