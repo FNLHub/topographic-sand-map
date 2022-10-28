@@ -1,32 +1,53 @@
 // Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel Pretty
+#pragma kernel blur
 #pragma kernel time_interpolate
+#pragma kernel copy_result
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 RWTexture2D<float4> Result;
 RWTexture2D<float4> Input;
 RWTexture2D<float4> Old;
-int max_x = 512;
-int max_y = 424;
+
+static const float gaussian[25] = {
+    1.0,  4.0,  7.0,  4.0, 1.0,
+    4.0, 16.0, 26.0, 16.0, 4.0,
+    7.0, 26.0, 41.0, 26.0, 7.0,
+    4.0, 16.0, 26.0, 16.0, 4.0,
+    1.0,  4.0,  7.0,  4.0, 1.0
+};
+
 
 [numthreads(8,8,1)]
-void Pretty (uint3 id : SV_DispatchThreadID)
+void time_interpolate(uint3 id: SV_DispatchThreadID) {
+    const float oldRatio = 0.7;
+    const float cutoff = 3.0/500;
+
+    uint2 pos = id.xy;
+    float useOld = step(abs(Old[pos].r-Input[pos].r),cutoff) * oldRatio;
+    Input[pos] = lerp(Input[pos],Old[pos],useOld);
+    Old[pos] = Input[pos];
+}
+
+[numthreads(8,8,1)]
+void blur (uint3 id : SV_DispatchThreadID)
 {
-    int2 pos = id.xy;
-    //Gaussianish blur
-    Result[pos] =
-        Input[pos+int2(-1,-1)] * 0.0947 +
-        Input[pos+int2(1,-1)] * 0.0947 +
-        Input[pos+int2(-1,1)] * 0.0947 +
-        Input[pos+int2(1,1)] * 0.0947 +
-        Input[pos+int2(0,-1)] * 0.118 +
-        Input[pos+int2(0,1)] * 0.118 +
-        Input[pos+int2(-1,0)] * 0.118 +
-        Input[pos+int2(1,0)] * 0.118 +
-        Input[pos+int2(-1,-1)] * 0.118 +
-        Input[pos]*0.01;
-    float4 old = Old[pos];
-    Old[pos]=Result[pos];
-    Result[pos] = Result[pos]*0.5+old*0.5;
+    const float cutoff = 3.0/500;
+    uint2 pos = id.xy;
+    float cumulative = 0.0;
+    float gauss_weight = 0.0;
+    uint2 base_pos = pos - uint2(2,2);
+    float cur = Input[pos].r;
+
+    for(uint i=0;i<25;i++) {
+        float gauss = gaussian[i] * step(abs(Input[pos].r-cur),4.0);
+        gauss_weight += gauss;
+        cumulative += Input[base_pos + uint2(i%5,i/5)].r * gauss;
+    }
+    Result[pos] = cumulative / gauss_weight;
+}
+
+[numthreads(8,8,1)]
+void copy_result(uint3 id: SV_DispatchThreadID) {
+    Result[id.xy] = Input[id.xy];
 }

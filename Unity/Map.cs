@@ -1,17 +1,3 @@
-/*
-    KEYSHORTCUTS:
-        N - cycle to next color scheme
-        C - change contour line opacity
-        B - change layer blur level
-        R - Toggle view raw depth data
-        Arrow keys - Move frame
-        Q - Rotate counterclockwise
-        E - Rotate clockwise
-        = (+) - Zoom in
-        -     - Zoom out
-
-**/
-
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -57,7 +43,9 @@ public class Map : MonoBehaviour
     private ushort[] _Data;
 
     //Prettify compute shader
-    public int computeKernel;
+    int prettify_taa_kernel;
+    int prettify_blur_kernel;
+    int prettify_copy_kernel;
     RenderTexture prettifyInput;
     RenderTexture prettifyOld;
     RenderTexture prettifyOutput;
@@ -68,6 +56,7 @@ public class Map : MonoBehaviour
     MaterialPropertyBlock propBlock;
     Texture2D levels;
     Texture2D map;
+    Texture2D finalTex;
     float useContour = 0.8f;
     float blurLayers = 0;
     int debugType = 0;
@@ -141,13 +130,18 @@ public class Map : MonoBehaviour
         }
 
         //Prettify compute shader
-        computeKernel = computeShader.FindKernel("Pretty");
+        prettify_taa_kernel = computeShader.FindKernel("time_interpolate");
+        prettify_blur_kernel = computeShader.FindKernel("blur");
+        prettify_copy_kernel = computeShader.FindKernel("copy_result");
         prettifyInput = create_rt("Input");
         prettifyOld = create_rt("Old");
         prettifyOutput = create_rt("Result");
-        computeShader.SetTexture(computeKernel, "Input", prettifyInput);
-        computeShader.SetTexture(computeKernel, "Old", prettifyOld);
-        computeShader.SetTexture(computeKernel, "Result", prettifyOutput);
+        computeShader.SetTexture(prettify_taa_kernel, "Input", prettifyInput);
+        computeShader.SetTexture(prettify_taa_kernel, "Old", prettifyOld);
+        computeShader.SetTexture(prettify_blur_kernel, "Input", prettifyInput);
+        computeShader.SetTexture(prettify_blur_kernel, "Result", prettifyOutput);
+        computeShader.SetTexture(prettify_copy_kernel, "Input", prettifyInput);
+        computeShader.SetTexture(prettify_copy_kernel, "Result", prettifyOutput);
 
         //Shader renderer
         levels = new Texture2D(10, 1);
@@ -158,7 +152,9 @@ public class Map : MonoBehaviour
 
         propBlock.SetTexture("segments", levels);
         map = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
-        propBlock.SetTexture("tex", map);
+        finalTex = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
+        //finalTex.filterMode = FilterMode.Point;
+        propBlock.SetTexture("tex", finalTex);
         levels.SetPixels(cols[0]);
         levels.Apply();
 
@@ -172,32 +168,43 @@ public class Map : MonoBehaviour
         propBlock = new MaterialPropertyBlock();
         _renderer.GetPropertyBlock(propBlock);
         KeyInput();
+        ReadFrame();
+        _renderer.SetPropertyBlock(propBlock);
+    }
+    void ReadFrame()
+    {
         if (_Reader != null)
         {
             var frame = _Reader.AcquireLatestFrame();
             if (frame != null)
             {
                 frame.CopyFrameDataToArray(_Data);
-
-                var frameDesc = _Sensor.DepthFrameSource.FrameDescription;
-                Color[] colors = new Color[frameDesc.Width * frameDesc.Height];
-                for (int i = 0; i < frameDesc.Width * frameDesc.Height; i++)
-                {
-                    float d = 1.0f - _Data[i] / 500f;
-                    colors[i] = new Color(d, d, d, 1.0f);
-                }
-                map.SetPixels(colors);
-                map.Apply();
-                Graphics.Blit(map, prettifyInput);
-                computeShader.Dispatch(computeKernel, 512 / 8, 424 / 8, 1);
-                RenderTexture.active = prettifyOutput;
-                Graphics.CopyTexture(prettifyOutput, map);
-                map.Apply();
+                ProcessFrame();
                 frame.Dispose();
-                frame = null;
             }
         }
-        _renderer.SetPropertyBlock(propBlock);
+    }
+    void ProcessFrame()
+    {
+        var frameDesc = _Sensor.DepthFrameSource.FrameDescription;
+        Color[] colors = new Color[frameDesc.Width * frameDesc.Height];
+        for (int i = 0; i < frameDesc.Width * frameDesc.Height; i++)
+        {
+            float d = 1.0f - _Data[i] / 500f;
+            colors[i] = new Color(d, d, d, 1.0f);
+        }
+        map.SetPixels(colors);
+        map.Apply();
+        Graphics.Blit(map, prettifyInput);
+        //Time bluring
+        computeShader.Dispatch(prettify_taa_kernel, 512 / 8, 424 / 8, 1);
+        //Position blurring
+        computeShader.Dispatch(prettify_blur_kernel, 512 / 8, 424 / 8, 1);
+        //Just copy input to output (for disabling filters)
+        //computeShader.Dispatch(prettify_copy_kernel, 512/8, 424/8, 1);
+        RenderTexture.active = prettifyOutput;
+        finalTex.ReadPixels(new Rect(0,0,512,424),0,0);
+        finalTex.Apply();
     }
     void KeyInput()
     {

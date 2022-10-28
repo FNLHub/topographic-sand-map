@@ -8,9 +8,7 @@ Shader "Unlit/UnlitShader"
         contour ("Contour Intensity", Float) = 1
         blurLayers ("Blur Layers", Float) = 0
         rawDepth ("Raw depth",Float) = 0
-        bigScaleZ ("BigScaleZ",Float) = 1
 
-        heightRange("Height Range",float) = 100
         corner1("Corner 1",Vector) = (0,0,0,1)
         corner2("Corner 2",Vector) = (1,0,0,1)
         corner3("Corner 3",Vector) = (0,1,0,1)
@@ -49,10 +47,7 @@ Shader "Unlit/UnlitShader"
             float blurLayers;
             float contour;
             float rawDepth;
-            float bigScaleZ;
-            float gaussSize;
 
-            float heightRange;
             float4 corner1;
             float4 corner2;
             float4 corner3;
@@ -74,10 +69,11 @@ Shader "Unlit/UnlitShader"
                 float dx = ddx(v);
                 float dy = ddy(v);
                 float dv = sqrt(abs(dx*dx)+abs(dy*dy));
-                float lineCloseness = smoothstep(0,1,frac(v)/sqrt(abs(dx*dx)+abs(dy*dy))/lineWidth);
+                float fracv = frac(v);
+                float lineCloseness = smoothstep(0,1,min(fracv,1-fracv)/dv/lineWidth);
                 //Get position on color map
-                float sec = lerp((v-frac(v))/10+0.05f,v/10+0.05f,blurLayers)*bigScaleZ;
-                return lerp(tex2D(segments,float2(sec,0)),v/10.0f+1.0f,rawDepth)*lineCloseness;
+                float sec = lerp((v-frac(v))/10+0.05f,v/10+0.05f,blurLayers);
+                return lerp(tex2D(segments,float2(sec,0)),v/10.0f+1.0f,rawDepth)*(lerp(1.0,lineCloseness,contour));
             }
             ENDCG
         }
