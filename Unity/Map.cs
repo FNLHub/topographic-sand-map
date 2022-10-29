@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
 using System;
 using System.Threading;
 using System.IO;
@@ -84,7 +85,7 @@ public class Map : MonoBehaviour
         {
             float screenW = Screen.width;
             float screenH = Screen.height;
-            GUI.skin.label.fontSize = (int)(screenH / 20);
+            GUI.skin.label.fontSize = (int)(screenH / 26);
             GUI.Label(new Rect(0.0f, 0.0f, screenW, screenH), @"
                 H - show help
                 C - change contour line opacity
@@ -101,6 +102,8 @@ public class Map : MonoBehaviour
                 F - lower base
                 T - raise max
                 G - lower max
+                left shift + s - Save alignment
+                left shift + l - Load alignment
             ");
 
         }
@@ -159,6 +162,7 @@ public class Map : MonoBehaviour
         levels.Apply();
 
         editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+        LoadPreset();
 
         _renderer.SetPropertyBlock(propBlock);
     }
@@ -203,7 +207,7 @@ public class Map : MonoBehaviour
         //Just copy input to output (for disabling filters)
         //computeShader.Dispatch(prettify_copy_kernel, 512/8, 424/8, 1);
         RenderTexture.active = prettifyOutput;
-        finalTex.ReadPixels(new Rect(0,0,512,424),0,0);
+        finalTex.ReadPixels(new Rect(0, 0, 512, 424), 0, 0);
         finalTex.Apply();
     }
     void KeyInput()
@@ -247,6 +251,43 @@ public class Map : MonoBehaviour
             propBlock.SetFloat("bigScaleZ", (debugType % 3 == 2) ? 5.0f : 1.0f);
         }
 
+        if (Input.GetKey("right shift") && Input.GetKey("s")) SavePreset();
+        if (Input.GetKey("right shift") && Input.GetKey("l")) LoadPreset();
+    }
+    void SavePreset()
+    {
+        string dest = Application.persistentDataPath + "/save.dat";
+        FileStream file;
+        if (File.Exists(dest)) file = File.OpenWrite(dest);
+        else file = File.Create(dest);
+        float[] dat = new float[]{
+            corner1.x,corner1.y,corner1.z,corner1.w,
+            corner2.x,corner2.y,corner2.z,corner2.w,
+            corner3.x,corner3.y,corner3.z,corner3.w,
+            corner4.x,corner4.y,corner4.z,corner4.w
+        };
+        BinaryFormatter bf = new BinaryFormatter();
+        bf.Serialize(file, dat);
+        file.Close();
+        Debug.Log("Saved to: " + Application.persistentDataPath);
+    }
+    void LoadPreset()
+    {
+        string dest = Application.persistentDataPath + "/save.dat";
+        FileStream file;
+        if (File.Exists(dest)) file = File.OpenRead(dest);
+        else
+        {
+            Debug.LogError("File not found");
+            return;
+        }
+        BinaryFormatter bf = new BinaryFormatter();
+        float[] dat = (float[])bf.Deserialize(file);
+        corner1 = new UnityEngine.Vector4(dat[0], dat[1], dat[2], dat[3]);
+        corner2 = new UnityEngine.Vector4(dat[4], dat[5], dat[6], dat[7]);
+        corner3 = new UnityEngine.Vector4(dat[8], dat[9], dat[10], dat[11]);
+        corner4 = new UnityEngine.Vector4(dat[12], dat[13], dat[14], dat[15]);
+        file.Close();
     }
 
     void OnApplicationQuit()

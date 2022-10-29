@@ -84,12 +84,12 @@ Material:
     - _ZWrite: 1
     - bigScaleZ: 1
     - blurLayers: 1
-    - contour: 0
+    - contour: 1
     - debugMode: 0
     - gaussSize: 0
-    - heightRange: 4.73
+    - heightRange: -16.64
     - lineCount: 9.79
-    - lineWidth: 2.36
+    - lineWidth: 1.41
     - rawDepth: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
