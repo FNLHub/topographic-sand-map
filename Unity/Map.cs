@@ -61,10 +61,10 @@ public class Map : MonoBehaviour
     float useContour = 0.8f;
     float blurLayers = 0;
     int debugType = 0;
-    public UnityEngine.Vector4 corner1 = new UnityEngine.Vector4(0.165f, 0.0078f, 0.3599f, 1.2505f);
-    public UnityEngine.Vector4 corner2 = new UnityEngine.Vector4(1.0168f, 0.004f, 0.2739f, 1.1039f);
-    public UnityEngine.Vector4 corner3 = new UnityEngine.Vector4(0.1556f, 0.41f, 0.182f, 1.026f);
-    public UnityEngine.Vector4 corner4 = new UnityEngine.Vector4(1.0f, 0.49f, 0.2125f, 1.0262f);
+    public UnityEngine.Vector4 corner1 = new UnityEngine.Vector4(0.165f, 0.0078f, 600f, 150f);
+    public UnityEngine.Vector4 corner2 = new UnityEngine.Vector4(1.0168f, 0.004f, 600f, 140f);
+    public UnityEngine.Vector4 corner3 = new UnityEngine.Vector4(0.1556f, 0.41f, 500f, 100f);
+    public UnityEngine.Vector4 corner4 = new UnityEngine.Vector4(1.0f, 0.49f, 500f, 100f);
     int curCorner = 0;
     //Shift corners by a linear amount
     void editCorners(UnityEngine.Vector4 shift)
@@ -194,7 +194,7 @@ public class Map : MonoBehaviour
         Color[] colors = new Color[frameDesc.Width * frameDesc.Height];
         for (int i = 0; i < frameDesc.Width * frameDesc.Height; i++)
         {
-            float d = 1.0f - _Data[i] / 500f;
+            float d = _Data[i];
             colors[i] = new Color(d, d, d, 1.0f);
         }
         map.SetPixels(colors);
@@ -225,11 +225,11 @@ public class Map : MonoBehaviour
         if (Input.GetAxis("Horizontal") != 0.0f) editCorners(new UnityEngine.Vector4(Input.GetAxis("Horizontal") * -0.03f * speedFactor, 0.0f, 0.0f, 0.0f));
         if (Input.GetAxis("Vertical") != 0.0f) editCorners(new UnityEngine.Vector4(0.0f, Input.GetAxis("Vertical") * 0.03f * speedFactor, 0.0f, 0.0f));
         //R and F control the height of the base
-        if (Input.GetKey("r")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.04f * speedFactor, 0.0f));
-        if (Input.GetKey("f")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.04f * -speedFactor, 0.0f));
+        if (Input.GetKey("r")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 20f * -speedFactor, 0.0f));
+        if (Input.GetKey("f")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 20f * speedFactor, 0.0f));
         //T and G control the height of the maximum
-        if (Input.GetKey("t")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 0.06f * speedFactor));
-        if (Input.GetKey("g")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 0.06f * -speedFactor));
+        if (Input.GetKey("t")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 20f * -speedFactor));
+        if (Input.GetKey("g")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 20f * speedFactor));
 
         //Visual keys
         //N toggles between different color maps
