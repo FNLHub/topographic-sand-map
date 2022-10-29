@@ -9,6 +9,24 @@ using Windows.Kinect;
 
 public class Map : MonoBehaviour
 {
+    void Start()
+    {
+        SetupKinect();
+        SetupShader();
+        NextTheme();
+        SetupPrettify();
+        renderer.SetPropertyBlock(propBlock);
+    }
+    void Update()
+    {
+        propBlock = new MaterialPropertyBlock();
+        renderer.GetPropertyBlock(propBlock);
+        KeyInput();
+        ReadFrame();
+        renderer.SetPropertyBlock(propBlock);
+    }
+
+    //THEMES
     static Color[][] themes = {
         new Color[] {
             new Color(0.8f,0.1f,0.1f,1),//Red
@@ -36,14 +54,20 @@ public class Map : MonoBehaviour
             new Color(1.0f,1.0f,1.0f,1) // Full snow
         }
     };
-    int curTheme = 0;
+    int curTheme = -1;
+    Texture2D levels;
+    void NextTheme()
+    {
+        curTheme = (curTheme + 1) % themes.Length;
+        levels = new Texture2D(themes[curTheme].Length, 1);
+        levels.wrapMode = TextureWrapMode.Clamp;
+        propBlock.SetTexture("segments", levels);
+        propBlock.SetFloat("layerCount", themes[curTheme].Length);
+        levels.SetPixels(themes[curTheme]);
+        levels.Apply();
+    }
 
-    //Data reading
-    private KinectSensor _Sensor;
-    private DepthFrameReader _Reader;
-    private ushort[] _Data;
-
-    //Prettify compute shader
+    //PRETTIFY
     int prettify_taa_kernel;
     int prettify_blur_kernel;
     int prettify_copy_kernel;
@@ -51,41 +75,174 @@ public class Map : MonoBehaviour
     RenderTexture prettifyOld;
     RenderTexture prettifyOutput;
     public ComputeShader computeShader;
+    RenderTexture create_rt(string name)
+    {
+        RenderTexture output = new RenderTexture(512, 424, sizeof(float) * 4, RenderTextureFormat.ARGBFloat);
+        output.enableRandomWrite = true;
+        output.Create();
+        return output;
+    }
+    void SetupPrettify()
+    {
+        //Prettify compute shader
+        prettify_taa_kernel = computeShader.FindKernel("time_interpolate");
+        prettify_blur_kernel = computeShader.FindKernel("blur");
+        prettify_copy_kernel = computeShader.FindKernel("copy_result");
+        prettifyInput = create_rt("Input");
+        prettifyOld = create_rt("Old");
+        prettifyOutput = create_rt("Result");
+        computeShader.SetTexture(prettify_taa_kernel, "Input", prettifyInput);
+        computeShader.SetTexture(prettify_taa_kernel, "Old", prettifyOld);
+        computeShader.SetTexture(prettify_blur_kernel, "Input", prettifyInput);
+        computeShader.SetTexture(prettify_blur_kernel, "Result", prettifyOutput);
+        computeShader.SetTexture(prettify_copy_kernel, "Input", prettifyInput);
+        computeShader.SetTexture(prettify_copy_kernel, "Result", prettifyOutput);
+    }
 
 
-    Renderer _renderer;
+    //SHADER
+    new Renderer renderer;
     MaterialPropertyBlock propBlock;
-    Texture2D levels;
     Texture2D map;
     Texture2D finalTex;
     float useContour = 0.8f;
     float blurLayers = 0;
-    public UnityEngine.Vector4 corner1 = new UnityEngine.Vector4(0.165f, 0.0078f, 600f, 150f);
-    public UnityEngine.Vector4 corner2 = new UnityEngine.Vector4(1.0168f, 0.004f, 600f, 140f);
-    public UnityEngine.Vector4 corner3 = new UnityEngine.Vector4(0.1556f, 0.41f, 500f, 100f);
-    public UnityEngine.Vector4 corner4 = new UnityEngine.Vector4(1.0f, 0.49f, 500f, 100f);
+    void SetupShader()
+    {
+        propBlock = new MaterialPropertyBlock();
+        renderer = GetComponent<Renderer>();
+        renderer.GetPropertyBlock(propBlock);
+        map = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
+        finalTex = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
+        //finalTex.filterMode = FilterMode.Point;
+        propBlock.SetTexture("tex", finalTex);
+        LoadPreset();
+        editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+    }
+    void ProcessFrame()
+    {
+        var size = sensor.DepthFrameSource.FrameDescription.LengthInPixels;
+        Color[] colors = new Color[size];
+        for (int i = 0; i < size; i++)
+            colors[i] = new Color(frameData[i], frameData[i], frameData[i], 1.0f);
+        map.SetPixels(colors);
+        map.Apply();
+        Graphics.Blit(map, prettifyInput);
+        //Time blurring
+        computeShader.Dispatch(prettify_taa_kernel, 512 / 8, 424 / 8, 1);
+        //Position blurring
+        computeShader.Dispatch(prettify_blur_kernel, 512 / 8, 424 / 8, 1);
+        //Just copy input to output (for disabling filters)
+        //computeShader.Dispatch(prettify_copy_kernel, 512/8, 424/8, 1);
+        RenderTexture.active = prettifyOutput;
+        finalTex.ReadPixels(new Rect(0, 0, 512, 424), 0, 0);
+        finalTex.Apply();
+    }
+
+    //ALIGNMENT
     int curCorner = 0;
+    public UnityEngine.Vector4[] corner = new UnityEngine.Vector4[] {
+        new UnityEngine.Vector4(0.165f, 0.0078f, 600f, 150f),
+        new UnityEngine.Vector4(1.0168f, 0.004f, 600f, 140f),
+        new UnityEngine.Vector4(0.1556f, 0.41f, 500f, 100f),
+        new UnityEngine.Vector4(1.0f, 0.49f, 500f, 100f)
+    };
+    void KeyInput()
+    {
+        //Corner control keys
+        for (int i = 1; i <= 4; i++) if (Input.GetKeyDown(i.ToString())) curCorner = i;
+        //Backtick selects all corners
+        if (Input.GetKeyDown("`")) curCorner = 0;
+        //WASD and arrow keys translate the viewport
+        UnityEngine.Vector4 cornerChange =
+            new UnityEngine.Vector4(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0, 0) * 0.03f;
+        if (Input.GetKey("r")) cornerChange.z -= 20f;
+        if (Input.GetKey("f")) cornerChange.z += 20f;
+        if (Input.GetKey("t")) cornerChange.w -= 20f;
+        if (Input.GetKey("g")) cornerChange.w += 20f;
+        if (Input.GetKey("left shift")) cornerChange *= 10;
+        editCorners(cornerChange * Time.deltaTime);
+
+        //Visual keys
+        if (Input.GetKeyDown("n")) NextTheme();
+        if (Input.GetKeyDown("c")) propBlock.SetFloat("contour", (useContour = (useContour + 0.1f) % 1.1f));
+        if (Input.GetKeyDown("b")) propBlock.SetFloat("blurLayers", (blurLayers = (blurLayers + 0.1f) % 1.1f));
+
+        if (Input.GetKey("right shift") && Input.GetKey("s")) SavePreset();
+        if (Input.GetKey("right shift") && Input.GetKey("l")) LoadPreset();
+    }
     //Shift corners by a linear amount
     void editCorners(UnityEngine.Vector4 shift)
     {
-        if (curCorner == 1 || curCorner == 0) corner1 += shift;
-        if (curCorner == 2 || curCorner == 0) corner2 += shift;
-        if (curCorner == 3 || curCorner == 0) corner3 += shift;
-        if (curCorner == 4 || curCorner == 0) corner4 += shift;
-        propBlock.SetVector("corner1", corner1);
-        propBlock.SetVector("corner2", corner2);
-        propBlock.SetVector("corner3", corner3);
-        propBlock.SetVector("corner4", corner4);
-
+        for (int i = 0; i < 4; i++) if (curCorner == i + 1 || curCorner == 0) corner[i] += shift;
+        propBlock.SetVector("corner1", corner[0]);
+        propBlock.SetVector("corner2", corner[1]);
+        propBlock.SetVector("corner3", corner[2]);
+        propBlock.SetVector("corner4", corner[3]);
     }
+    void SavePreset()
+    {
+        string presetDest = Application.persistentDataPath + "/save.dat";
+        FileStream file;
+        if (File.Exists(presetDest)) file = File.OpenWrite(presetDest);
+        else file = File.Create(presetDest);
+        new BinaryFormatter().Serialize(file, new float[]{
+            corner[0].x,corner[0].y,corner[0].z,corner[0].w,
+            corner[1].x,corner[1].y,corner[1].z,corner[1].w,
+            corner[2].x,corner[2].y,corner[2].z,corner[2].w,
+            corner[3].x,corner[3].y,corner[3].z,corner[3].w
+        });
+        file.Close();
+        Debug.Log("Saved to: " + Application.persistentDataPath);
+    }
+    void LoadPreset()
+    {
+        string presetDest = Application.persistentDataPath + "/save.dat";
+        FileStream file;
+        if (File.Exists(presetDest)) file = File.OpenRead(presetDest);
+        else { Debug.LogError("File not found"); return; }
+        float[] dat = (float[])new BinaryFormatter().Deserialize(file);
+        corner[0] = new UnityEngine.Vector4(dat[0], dat[1], dat[2], dat[3]);
+        corner[1] = new UnityEngine.Vector4(dat[4], dat[5], dat[6], dat[7]);
+        corner[2] = new UnityEngine.Vector4(dat[8], dat[9], dat[10], dat[11]);
+        corner[3] = new UnityEngine.Vector4(dat[12], dat[13], dat[14], dat[15]);
+        file.Close();
+    }
+
+    //KINECT INTERFACE
+    private KinectSensor sensor;
+    private DepthFrameReader reader;
+    private ushort[] frameData;
+    void SetupKinect()
+    {
+        sensor = KinectSensor.GetDefault();
+        if (sensor == null) { Debug.LogError("Camera not found"); return; }
+        sensor.Open();
+        reader = sensor.DepthFrameSource.OpenReader();
+        frameData = new ushort[sensor.DepthFrameSource.FrameDescription.LengthInPixels];
+    }
+    void ReadFrame()
+    {
+        if (reader == null) return;
+        var frame = reader.AcquireLatestFrame();
+        if (frame == null) return;
+        frame.CopyFrameDataToArray(frameData);
+        ProcessFrame();
+        frame.Dispose();
+    }
+    void OnApplicationQuit()
+    {
+        if (reader != null) reader.Dispose();
+        if (sensor != null && sensor.IsOpen) sensor.Close();
+    }
+
+    //GUI
     void OnGUI()
     {
         if (Input.GetKey("h"))
         {
-            float screenW = Screen.width;
-            float screenH = Screen.height;
-            GUI.skin.label.fontSize = (int)(screenH / 26);
-            GUI.Label(new Rect(0.0f, 0.0f, screenW, screenH), @"
+            GUI.skin.label.fontSize = (int)(Screen.height / 26);
+            GUI.Label(new Rect(0.0f, 0.0f, Screen.width, Screen.height), @"
                 H - show help
                 C - change contour line opacity
                 B - blur layers
@@ -103,204 +260,7 @@ public class Map : MonoBehaviour
                 left shift + s - Save alignment
                 left shift + l - Load alignment
             ");
-
-        }
-
-    }
-    RenderTexture create_rt(string name)
-    {
-        RenderTexture output = new RenderTexture(512, 424, sizeof(float) * 4, RenderTextureFormat.ARGBFloat);
-        output.enableRandomWrite = true;
-        output.Create();
-        return output;
-    }
-    void Start()
-    {
-        //Sensors
-        _Sensor = KinectSensor.GetDefault();
-        if (_Sensor != null)
-        {
-            _Sensor.Open();
-            _Reader = _Sensor.DepthFrameSource.OpenReader();
-            _Data = new ushort[_Sensor.DepthFrameSource.FrameDescription.LengthInPixels];
-            Debug.Log("camera found");
-        }
-        else
-        {
-            Debug.Log("Camera not found");
-        }
-
-        //Prettify compute shader
-        prettify_taa_kernel = computeShader.FindKernel("time_interpolate");
-        prettify_blur_kernel = computeShader.FindKernel("blur");
-        prettify_copy_kernel = computeShader.FindKernel("copy_result");
-        prettifyInput = create_rt("Input");
-        prettifyOld = create_rt("Old");
-        prettifyOutput = create_rt("Result");
-        computeShader.SetTexture(prettify_taa_kernel, "Input", prettifyInput);
-        computeShader.SetTexture(prettify_taa_kernel, "Old", prettifyOld);
-        computeShader.SetTexture(prettify_blur_kernel, "Input", prettifyInput);
-        computeShader.SetTexture(prettify_blur_kernel, "Result", prettifyOutput);
-        computeShader.SetTexture(prettify_copy_kernel, "Input", prettifyInput);
-        computeShader.SetTexture(prettify_copy_kernel, "Result", prettifyOutput);
-
-        //Shader renderer
-        propBlock = new MaterialPropertyBlock();
-        _renderer = GetComponent<Renderer>();
-        _renderer.GetPropertyBlock(propBlock);
-
-        //Theme
-        levels = new Texture2D(themes[curTheme].Length, 1);
-        levels.wrapMode = TextureWrapMode.Clamp;
-        propBlock.SetTexture("segments", levels);
-        propBlock.SetFloat("layerCount", themes[curTheme].Length);
-        levels.SetPixels(themes[curTheme]);
-        levels.Apply();
-
-        //Rendering textures
-        map = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
-        finalTex = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
-        //finalTex.filterMode = FilterMode.Point;
-        propBlock.SetTexture("tex", finalTex);
-
-        editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-        LoadPreset();
-
-        _renderer.SetPropertyBlock(propBlock);
-    }
-    // Update is called once per frame
-    void Update()
-    {
-        propBlock = new MaterialPropertyBlock();
-        _renderer.GetPropertyBlock(propBlock);
-        KeyInput();
-        ReadFrame();
-        _renderer.SetPropertyBlock(propBlock);
-    }
-    void ReadFrame()
-    {
-        if (_Reader != null)
-        {
-            var frame = _Reader.AcquireLatestFrame();
-            if (frame != null)
-            {
-                frame.CopyFrameDataToArray(_Data);
-                ProcessFrame();
-                frame.Dispose();
-            }
         }
     }
-    void ProcessFrame()
-    {
-        var frameDesc = _Sensor.DepthFrameSource.FrameDescription;
-        Color[] colors = new Color[frameDesc.Width * frameDesc.Height];
-        for (int i = 0; i < frameDesc.Width * frameDesc.Height; i++)
-        {
-            float d = _Data[i];
-            colors[i] = new Color(d, d, d, 1.0f);
-        }
-        map.SetPixels(colors);
-        map.Apply();
-        Graphics.Blit(map, prettifyInput);
-        //Time bluring
-        computeShader.Dispatch(prettify_taa_kernel, 512 / 8, 424 / 8, 1);
-        //Position blurring
-        computeShader.Dispatch(prettify_blur_kernel, 512 / 8, 424 / 8, 1);
-        //Just copy input to output (for disabling filters)
-        //computeShader.Dispatch(prettify_copy_kernel, 512/8, 424/8, 1);
-        RenderTexture.active = prettifyOutput;
-        finalTex.ReadPixels(new Rect(0, 0, 512, 424), 0, 0);
-        finalTex.Apply();
-    }
-    void KeyInput()
-    {
-        float speedFactor = Time.deltaTime;
-        if (Input.GetKey("left shift")) speedFactor *= 10;
-        //Corner control keys
-        if (Input.GetKeyDown("1")) curCorner = 1;
-        if (Input.GetKeyDown("2")) curCorner = 2;
-        if (Input.GetKeyDown("3")) curCorner = 3;
-        if (Input.GetKeyDown("4")) curCorner = 4;
-        //Backtick selects all corners
-        if (Input.GetKeyDown("`")) curCorner = 0;
-        //WASD and arrow keys translate the viewport
-        if (Input.GetAxis("Horizontal") != 0.0f) editCorners(new UnityEngine.Vector4(Input.GetAxis("Horizontal") * -0.03f * speedFactor, 0.0f, 0.0f, 0.0f));
-        if (Input.GetAxis("Vertical") != 0.0f) editCorners(new UnityEngine.Vector4(0.0f, Input.GetAxis("Vertical") * 0.03f * speedFactor, 0.0f, 0.0f));
-        //R and F control the height of the base
-        if (Input.GetKey("r")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 20f * -speedFactor, 0.0f));
-        if (Input.GetKey("f")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 20f * speedFactor, 0.0f));
-        //T and G control the height of the maximum
-        if (Input.GetKey("t")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 20f * -speedFactor));
-        if (Input.GetKey("g")) editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 20f * speedFactor));
 
-        //Visual keys
-        //N toggles between different color maps
-        if (Input.GetKeyDown("n"))
-        {
-            curTheme = (curTheme + 1) % themes.Length;
-            levels = new Texture2D(themes[curTheme].Length, 1);
-            levels.wrapMode = TextureWrapMode.Clamp;
-            levels.SetPixels(themes[curTheme]);
-            levels.Apply();
-            propBlock.SetTexture("segments", levels);
-            propBlock.SetFloat("layerCount", themes[curTheme].Length);
-        }
-        //C cycles through different contour lines
-        if (Input.GetKeyDown("c")) propBlock.SetFloat("contour", (useContour = (useContour + 0.1f) % 1.1f));
-        //B cycles through different level blur amounts
-        if (Input.GetKeyDown("b")) propBlock.SetFloat("blurLayers", (blurLayers = (blurLayers + 0.1f) % 1.1f));
-
-        if (Input.GetKey("right shift") && Input.GetKey("s")) SavePreset();
-        if (Input.GetKey("right shift") && Input.GetKey("l")) LoadPreset();
-    }
-    void SavePreset()
-    {
-        string dest = Application.persistentDataPath + "/save.dat";
-        FileStream file;
-        if (File.Exists(dest)) file = File.OpenWrite(dest);
-        else file = File.Create(dest);
-        float[] dat = new float[]{
-            corner1.x,corner1.y,corner1.z,corner1.w,
-            corner2.x,corner2.y,corner2.z,corner2.w,
-            corner3.x,corner3.y,corner3.z,corner3.w,
-            corner4.x,corner4.y,corner4.z,corner4.w
-        };
-        BinaryFormatter bf = new BinaryFormatter();
-        bf.Serialize(file, dat);
-        file.Close();
-        Debug.Log("Saved to: " + Application.persistentDataPath);
-    }
-    void LoadPreset()
-    {
-        string dest = Application.persistentDataPath + "/save.dat";
-        FileStream file;
-        if (File.Exists(dest)) file = File.OpenRead(dest);
-        else
-        {
-            Debug.LogError("File not found");
-            return;
-        }
-        BinaryFormatter bf = new BinaryFormatter();
-        float[] dat = (float[])bf.Deserialize(file);
-        corner1 = new UnityEngine.Vector4(dat[0], dat[1], dat[2], dat[3]);
-        corner2 = new UnityEngine.Vector4(dat[4], dat[5], dat[6], dat[7]);
-        corner3 = new UnityEngine.Vector4(dat[8], dat[9], dat[10], dat[11]);
-        corner4 = new UnityEngine.Vector4(dat[12], dat[13], dat[14], dat[15]);
-        file.Close();
-    }
-
-    void OnApplicationQuit()
-    {
-        if (_Reader != null)
-        {
-            _Reader.Dispose();
-            _Reader = null;
-        }
-        if (_Sensor != null)
-        {
-            if (_Sensor.IsOpen)
-                _Sensor.Close();
-            _Sensor = null;
-        }
-    }
 }
