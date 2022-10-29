@@ -148,7 +148,7 @@ public class Map : MonoBehaviour
 
         //Shader renderer
         levels = new Texture2D(10, 1);
-        levels.wrapMode = TextureWrapMode.Repeat;
+        levels.wrapMode = TextureWrapMode.Clamp;
         propBlock = new MaterialPropertyBlock();
         _renderer = GetComponent<Renderer>();
         _renderer.GetPropertyBlock(propBlock);
