@@ -60,7 +60,6 @@ public class Map : MonoBehaviour
     Texture2D finalTex;
     float useContour = 0.8f;
     float blurLayers = 0;
-    int debugType = 0;
     public UnityEngine.Vector4 corner1 = new UnityEngine.Vector4(0.165f, 0.0078f, 600f, 150f);
     public UnityEngine.Vector4 corner2 = new UnityEngine.Vector4(1.0168f, 0.004f, 600f, 140f);
     public UnityEngine.Vector4 corner3 = new UnityEngine.Vector4(0.1556f, 0.41f, 500f, 100f);
@@ -90,7 +89,6 @@ public class Map : MonoBehaviour
                 H - show help
                 C - change contour line opacity
                 B - blur layers
-                X - switch between alternative displays
                 N - change layer design
 
                 Corner manipulation:
@@ -251,13 +249,6 @@ public class Map : MonoBehaviour
         if (Input.GetKeyDown("c")) propBlock.SetFloat("contour", (useContour = (useContour + 0.1f) % 1.1f));
         //B cycles through different level blur amounts
         if (Input.GetKeyDown("b")) propBlock.SetFloat("blurLayers", (blurLayers = (blurLayers + 0.1f) % 1.1f));
-        //X cycles through different debug display modes
-        if (Input.GetKeyDown("x"))
-        {
-            debugType++;
-            propBlock.SetFloat("rawDepth", (debugType % 3 == 1) ? 1.0f : 0.0f);
-            propBlock.SetFloat("bigScaleZ", (debugType % 3 == 2) ? 5.0f : 1.0f);
-        }
 
         if (Input.GetKey("right shift") && Input.GetKey("s")) SavePreset();
         if (Input.GetKey("right shift") && Input.GetKey("l")) LoadPreset();

@@ -58,6 +58,4 @@ There are also several keybindings to change how the projection looks.
 
 `n` - Switch layer design (currently there are rainbow and island)
 
-`x` - Switch debugging displays
-
 `h` - Show keybindings help
