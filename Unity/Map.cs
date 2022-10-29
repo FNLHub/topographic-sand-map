@@ -9,8 +9,8 @@ using Windows.Kinect;
 
 public class Map : MonoBehaviour
 {
-    static Color[][] cols = {
-        new Color[10] {
+    static Color[][] themes = {
+        new Color[] {
             new Color(0.8f,0.1f,0.1f,1),//Red
             new Color(0.75f,0.3f,0.1f,1),//Red
             new Color(0.7f,0.5f,0.1f,1),//Orange
@@ -20,23 +20,23 @@ public class Map : MonoBehaviour
             new Color(0.1f,0.1f,1.0f,1),//Blue
             new Color(0.2f,0.1f,0.8f,1),//Blue
             new Color(0.5f,0.1f,0.7f,1),//Purple
-            new Color(0.7f,0.1f,0.3f,1),
         },
-        new Color[10] {
-            new Color(0.075f,0.075f,0.3f,1), //Ocean floor
+        new Color[] {
             new Color(0.1f,0.1f,0.4f,1), // Deep ocean
             new Color(0.15f,0.15f,0.6f,1), //Ocean
             new Color(0.2f,0.2f,0.8f,1),//Shallow ocean
             new Color(0.9f,0.8f,0.6f,1), // Beach
-
+            new Color(0.9f,0.8f,0.6f,1), // Beach
             new Color(0.2f,0.5f,0.2f,1), //Grass
             new Color(0.2f,0.5f,0.2f,1), //Grass
             new Color(0.5f,0.5f,0.5f,1), // Above tree line
+            new Color(0.5f,0.5f,0.5f,1), // Above tree line
             new Color(0.8f,0.8f,0.8f,1),  // Partial snow
-            new Color(1,1,1,1) // Full snow
+            new Color(0.8f,0.8f,0.8f,1),  // Partial snow
+            new Color(1.0f,1.0f,1.0f,1) // Full snow
         }
     };
-    int curCols = 0;
+    int curTheme = 0;
 
     //Data reading
     private KinectSensor _Sensor;
@@ -147,19 +147,23 @@ public class Map : MonoBehaviour
         computeShader.SetTexture(prettify_copy_kernel, "Result", prettifyOutput);
 
         //Shader renderer
-        levels = new Texture2D(10, 1);
-        levels.wrapMode = TextureWrapMode.Clamp;
         propBlock = new MaterialPropertyBlock();
         _renderer = GetComponent<Renderer>();
         _renderer.GetPropertyBlock(propBlock);
 
+        //Theme
+        levels = new Texture2D(themes[curTheme].Length, 1);
+        levels.wrapMode = TextureWrapMode.Clamp;
         propBlock.SetTexture("segments", levels);
+        propBlock.SetFloat("layerCount", themes[curTheme].Length);
+        levels.SetPixels(themes[curTheme]);
+        levels.Apply();
+
+        //Rendering textures
         map = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
         finalTex = new Texture2D(512, 424, TextureFormat.RGBAFloat, false);
         //finalTex.filterMode = FilterMode.Point;
         propBlock.SetTexture("tex", finalTex);
-        levels.SetPixels(cols[0]);
-        levels.Apply();
 
         editCorners(new UnityEngine.Vector4(0.0f, 0.0f, 0.0f, 0.0f));
         LoadPreset();
@@ -235,9 +239,13 @@ public class Map : MonoBehaviour
         //N toggles between different color maps
         if (Input.GetKeyDown("n"))
         {
-            curCols = (curCols + 1) % cols.Length;
-            levels.SetPixels(cols[curCols]);
+            curTheme = (curTheme + 1) % themes.Length;
+            levels = new Texture2D(themes[curTheme].Length, 1);
+            levels.wrapMode = TextureWrapMode.Clamp;
+            levels.SetPixels(themes[curTheme]);
             levels.Apply();
+            propBlock.SetTexture("segments", levels);
+            propBlock.SetFloat("layerCount", themes[curTheme].Length);
         }
         //C cycles through different contour lines
         if (Input.GetKeyDown("c")) propBlock.SetFloat("contour", (useContour = (useContour + 0.1f) % 1.1f));

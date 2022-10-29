@@ -88,8 +88,9 @@ Material:
     - debugMode: 0
     - gaussSize: 0
     - heightRange: -16.64
+    - layerCount: 1
     - lineCount: 9.79
-    - lineWidth: 1.41
+    - lineWidth: 14
     - rawDepth: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

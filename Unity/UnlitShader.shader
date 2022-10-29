@@ -8,6 +8,7 @@ Shader "Unlit/UnlitShader"
         contour ("Contour Intensity", Float) = 1
         blurLayers ("Blur Layers", Float) = 0
         rawDepth ("Raw depth",Float) = 0
+        layerCount ("Layer Count",Float) = 1
 
         corner1("Corner 1",Vector) = (0,0,0,1)
         corner2("Corner 2",Vector) = (1,0,0,1)
@@ -43,6 +44,8 @@ Shader "Unlit/UnlitShader"
             sampler2D tex;
 
             sampler2D segments;
+            float layerCount;
+
             float lineWidth;
             float blurLayers;
             float contour;
@@ -64,11 +67,14 @@ Shader "Unlit/UnlitShader"
                 float4 pos = lerp(lerp(corner2,corner1,i.uv.x),lerp(corner4,corner3,i.uv.x),i.uv.y);
                 //Gaussian blur the sampling
                 float v = tex2D(tex, pos.xy).r;
-                v = (v-pos.z)/(pos.w-pos.z)*10;
+                v = (v-pos.z)/(pos.w-pos.z);
                 //Find derivative to calculate closeness to contour line
                 float dx = ddx(v);
                 float dy = ddy(v);
                 float dv = sqrt(abs(dx*dx)+abs(dy*dy));
+
+                v *= layerCount;
+
                 float fracv = frac(v);
                 float lineCloseness = smoothstep(0,1,min(fracv,1-fracv)/dv/lineWidth);
                 //Get position on color map
