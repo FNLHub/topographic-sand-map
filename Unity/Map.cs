@@ -7,6 +7,77 @@ using System.IO;
 using UnityEngine;
 using Windows.Kinect;
 
+class ThemeLayer
+{
+    public Color[] tex;
+    public Color col;
+    public ThemeLayer(Color mainCol, string file = "white.png", Color? fileTint = null)
+    {
+        Color tint = fileTint ?? new Color(1f, 1f, 1f, 1f);
+        col = mainCol * tint;
+        if(file=="white.png") tint = mainCol;
+        tex = new Color[512 * 512];
+        Texture2D tex2d = new Texture2D(2, 2);
+        tex2d.LoadImage(File.ReadAllBytes("Assets/topographic-sand-map/Textures/" + file));
+        tex = tex2d.GetPixels();
+        if (tint.r != 1 || tint.g != 1 || tint.b != 1 || tint.a != 1) for (int i = 0; i < tex.Length; i++)
+            {
+                tex[i] *= tint;
+            }
+    }
+    static public Tuple<Texture2D, Texture3D> createTheme(ThemeLayer[] layers)
+    {
+        Texture3D tex3d = new Texture3D(512, 512, layers.Length, TextureFormat.RGBA32, 0);
+        List<Color> cols = new List<Color>();
+        for (int i = 0; i < layers.Length; i++)
+        {
+            cols.AddRange(layers[i].tex);
+        }
+        tex3d.SetPixels(cols.ToArray());
+        tex3d.wrapModeU = TextureWrapMode.Repeat;
+        tex3d.wrapModeV = TextureWrapMode.Repeat;
+        tex3d.wrapModeW = TextureWrapMode.Clamp;
+
+        Texture2D tex2d = new Texture2D(1, layers.Length);
+        cols = new List<Color>();
+        for (int i = 0; i < layers.Length; i++)
+        {
+            cols.Add(layers[i].col);
+        }
+        tex2d.SetPixels(cols.ToArray());
+        tex2d.wrapMode=TextureWrapMode.Clamp;
+        return new Tuple<Texture2D,Texture3D>(tex2d, tex3d);
+    }
+    //THEMES
+    public static ThemeLayer[][] themes = {
+        new ThemeLayer[] {
+            new ThemeLayer(new Color(0.33f,0.51f,0.61f,1f),"water.png",new Color(0.5f,0.5f,0.5f,1f)),//Deep Ocean
+            new ThemeLayer(new Color(0.33f,0.51f,0.61f,1f),"water.png",new Color(0.7f,0.7f,0.7f,1f)),//Ocean
+            new ThemeLayer(new Color(0.33f,0.51f,0.61f,1f),"water.png",new Color(1f,1f,1f,1)),//Shallow Ocean
+            new ThemeLayer(new Color(0.85f,0.75f,0.57f,1f),"sand.png",new Color(1f,1f,1f,1)),// Beach
+            new ThemeLayer(new Color(0.85f,0.75f,0.57f,1f),"sand.png",new Color(1f,1f,1f,1)),// Beach
+            new ThemeLayer(new Color(0.37f,0.53f,0.31f,1f),"grass.png",new Color(1f,1f,1f,1)),// Grass
+            new ThemeLayer(new Color(0.37f,0.53f,0.31f,1f),"grass.png",new Color(1f,1f,1f,1)),// Grass
+            new ThemeLayer(new Color(0.55f,0.55f,0.55f,1f),"rock.png",new Color(1f,1f,1f,1)),// Rock
+            new ThemeLayer(new Color(0.55f,0.55f,0.55f,1f),"rock.png",new Color(1f,1f,1f,1)),// Rock
+            new ThemeLayer(new Color(1f,1f,1f,1f),"snow.png",new Color(0.8f,0.8f,0.8f,1)),//Light snow
+            new ThemeLayer(new Color(1f,1f,1f,1f),"snow.png",new Color(0.8f,0.8f,0.8f,1)),//Light snow
+            new ThemeLayer(new Color(1f,1f,1f,1f),"snow.png",new Color(1f,1f,1f,1)),//Snow
+        },
+        new ThemeLayer[] {
+            new ThemeLayer(new Color(0.8f,0.1f,0.1f,1)),//Red
+            new ThemeLayer(new Color(0.75f,0.3f,0.1f,1)),//Red
+            new ThemeLayer(new Color(0.7f,0.5f,0.1f,1)),//Orange
+            new ThemeLayer(new Color(0.65f,0.65f,0.1f,1)),//Yellow
+            new ThemeLayer(new Color(0.1f,0.65f,0.1f,1)),//Green
+            new ThemeLayer(new Color(0.1f,0.5f,0.5f,1)),//Teal
+            new ThemeLayer(new Color(0.1f,0.1f,1.0f,1)),//Blue
+            new ThemeLayer(new Color(0.2f,0.1f,0.8f,1)),//Blue
+            new ThemeLayer(new Color(0.5f,0.1f,0.7f,1)),//Purple
+        }
+    };
+};
+
 public class Map : MonoBehaviour
 {
     void Start()
@@ -26,45 +97,18 @@ public class Map : MonoBehaviour
         renderer.SetPropertyBlock(propBlock);
     }
 
-    //THEMES
-    static Color[][] themes = {
-        new Color[] {
-            new Color(0.8f,0.1f,0.1f,1),//Red
-            new Color(0.75f,0.3f,0.1f,1),//Red
-            new Color(0.7f,0.5f,0.1f,1),//Orange
-            new Color(0.65f,0.65f,0.1f,1),//Yellow
-            new Color(0.1f,0.65f,0.1f,1),//Green
-            new Color(0.1f,0.5f,0.5f,1),//Teal
-            new Color(0.1f,0.1f,1.0f,1),//Blue
-            new Color(0.2f,0.1f,0.8f,1),//Blue
-            new Color(0.5f,0.1f,0.7f,1),//Purple
-        },
-        new Color[] {
-            new Color(0.1f,0.1f,0.4f,1), // Deep ocean
-            new Color(0.15f,0.15f,0.6f,1), //Ocean
-            new Color(0.2f,0.2f,0.8f,1),//Shallow ocean
-            new Color(0.9f,0.8f,0.6f,1), // Beach
-            new Color(0.9f,0.8f,0.6f,1), // Beach
-            new Color(0.2f,0.5f,0.2f,1), //Grass
-            new Color(0.2f,0.5f,0.2f,1), //Grass
-            new Color(0.5f,0.5f,0.5f,1), // Above tree line
-            new Color(0.5f,0.5f,0.5f,1), // Above tree line
-            new Color(0.8f,0.8f,0.8f,1),  // Partial snow
-            new Color(0.8f,0.8f,0.8f,1),  // Partial snow
-            new Color(1.0f,1.0f,1.0f,1) // Full snow
-        }
-    };
     int curTheme = -1;
-    Texture2D levels;
+    Texture3D themeTextures;
+    Texture2D themeColors;
     void NextTheme()
     {
-        curTheme = (curTheme + 1) % themes.Length;
-        levels = new Texture2D(themes[curTheme].Length, 1);
-        levels.wrapMode = TextureWrapMode.Clamp;
-        propBlock.SetTexture("segments", levels);
-        propBlock.SetFloat("layerCount", themes[curTheme].Length);
-        levels.SetPixels(themes[curTheme]);
-        levels.Apply();
+        curTheme = (curTheme + 1) % ThemeLayer.themes.Length;
+        (themeColors,themeTextures) = ThemeLayer.createTheme(ThemeLayer.themes[curTheme]);
+        propBlock.SetTexture("theme", themeTextures);
+        propBlock.SetTexture("themeCol", themeColors);
+        themeColors.Apply();
+        themeTextures.Apply();
+        propBlock.SetFloat("layerCount", ThemeLayer.themes[curTheme].Length);
     }
 
     //PRETTIFY
@@ -107,6 +151,7 @@ public class Map : MonoBehaviour
     Texture2D finalTex;
     float useContour = 0.8f;
     float blurLayers = 0;
+    float useTex = 1.0f;
     void SetupShader()
     {
         propBlock = new MaterialPropertyBlock();
@@ -167,6 +212,7 @@ public class Map : MonoBehaviour
         if (Input.GetKeyDown("n")) NextTheme();
         if (Input.GetKeyDown("c")) propBlock.SetFloat("contour", (useContour = (useContour + 0.1f) % 1.1f));
         if (Input.GetKeyDown("b")) propBlock.SetFloat("blurLayers", (blurLayers = (blurLayers + 0.1f) % 1.1f));
+        if (Input.GetKeyDown("x")) propBlock.SetFloat("useThemeTex", (useTex = (useTex + 0.1f) % 1.1f));
 
         if (Input.GetKey("right shift") && Input.GetKey("s")) SavePreset();
         if (Input.GetKey("right shift") && Input.GetKey("l")) LoadPreset();

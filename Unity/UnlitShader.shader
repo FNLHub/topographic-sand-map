@@ -3,9 +3,11 @@ Shader "Unlit/UnlitShader"
     Properties
     {
         tex ("Texture", 2D) = "white" {}
-        segments ("Height colors", 2D) = "white" {}
+        theme ("Theme texture", 3D) = "white" {}
+        themeCol ("Theme colors", 2D) = "white" {}
         lineWidth ("Line Width", Float) = 10
         contour ("Contour Intensity", Float) = 1
+        useThemeTex ("Theme Texture Intensity",Float) = 1
         blurLayers ("Blur Layers", Float) = 0
         layerCount ("Layer Count",Float) = 1
 
@@ -13,6 +15,7 @@ Shader "Unlit/UnlitShader"
         corner2("Corner 2",Vector) = (1,0,0,1)
         corner3("Corner 3",Vector) = (0,1,0,1)
         corner4("Corner 4",Vector) = (1,1,0,1)
+
     }
     SubShader
     {
@@ -42,13 +45,14 @@ Shader "Unlit/UnlitShader"
 
             sampler2D tex;
 
-            sampler2D segments;
+            sampler3D theme;
+            sampler2D themeCol;
             float layerCount;
 
             float lineWidth;
             float blurLayers;
             float contour;
-            float rawDepth;
+            float useThemeTex;
 
             float4 corner1;
             float4 corner2;
@@ -75,10 +79,11 @@ Shader "Unlit/UnlitShader"
                 v *= layerCount;
 
                 float fracv = frac(v);
-                float lineCloseness = smoothstep(0,1,min(fracv,1-fracv)/dv/lineWidth);
+                float lineCloseness = lerp(1.0,smoothstep(0,1,min(fracv,1-fracv)/dv/lineWidth),contour);
                 //Get position on color map
                 float sec = lerp((v-frac(v))/layerCount+0.05f,v/layerCount+0.05f,blurLayers);
-                return tex2D(segments,float2(sec,0))*(lerp(1.0,lineCloseness,contour));
+                float4 color = lerp(tex2D(themeCol,float2(0,sec)),tex3D(theme,float3(pos.x*512/424,pos.y,sec)),useThemeTex);
+                return color*lineCloseness;
             }
             ENDCG
         }
