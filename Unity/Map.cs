@@ -15,7 +15,7 @@ class ThemeLayer
     {
         Color tint = fileTint ?? new Color(1f, 1f, 1f, 1f);
         col = mainCol * tint;
-        if(file=="white.png") tint = mainCol;
+        if (file == "white.png" && tint.a==1f) tint = col;
         tex = new Color[512 * 512];
         Texture2D tex2d = new Texture2D(2, 2);
         tex2d.LoadImage(File.ReadAllBytes("Assets/topographic-sand-map/Textures/" + file));
@@ -45,15 +45,15 @@ class ThemeLayer
             cols.Add(layers[i].col);
         }
         tex2d.SetPixels(cols.ToArray());
-        tex2d.wrapMode=TextureWrapMode.Clamp;
-        return new Tuple<Texture2D,Texture3D>(tex2d, tex3d);
+        tex2d.wrapMode = TextureWrapMode.Clamp;
+        return new Tuple<Texture2D, Texture3D>(tex2d, tex3d);
     }
     //THEMES
     public static ThemeLayer[][] themes = {
         new ThemeLayer[] {
-            new ThemeLayer(new Color(0.33f,0.51f,0.61f,1f),"water.png",new Color(0.5f,0.5f,0.5f,1f)),//Deep Ocean
-            new ThemeLayer(new Color(0.33f,0.51f,0.61f,1f),"water.png",new Color(0.7f,0.7f,0.7f,1f)),//Ocean
-            new ThemeLayer(new Color(0.33f,0.51f,0.61f,1f),"water.png",new Color(1f,1f,1f,1)),//Shallow Ocean
+            new ThemeLayer(new Color(0.23f,0.38f,1.0f,5f),"water.png",new Color(0.6f,0.6f,0.6f,0.2f)),//Deep Ocean
+            new ThemeLayer(new Color(0.23f,0.38f,1.0f,5f),"water.png",new Color(0.8f,0.8f,0.8f,0.2f)),//Ocean
+            new ThemeLayer(new Color(0.23f,0.38f,1.0f,5f),"water.png",new Color(1f,1f,1f,0.2f)),//Shallow Ocean
             new ThemeLayer(new Color(0.85f,0.75f,0.57f,1f),"sand.png",new Color(1f,1f,1f,1)),// Beach
             new ThemeLayer(new Color(0.85f,0.75f,0.57f,1f),"sand.png",new Color(1f,1f,1f,1)),// Beach
             new ThemeLayer(new Color(0.37f,0.53f,0.31f,1f),"grass.png",new Color(1f,1f,1f,1)),// Grass
@@ -103,7 +103,7 @@ public class Map : MonoBehaviour
     void NextTheme()
     {
         curTheme = (curTheme + 1) % ThemeLayer.themes.Length;
-        (themeColors,themeTextures) = ThemeLayer.createTheme(ThemeLayer.themes[curTheme]);
+        (themeColors, themeTextures) = ThemeLayer.createTheme(ThemeLayer.themes[curTheme]);
         propBlock.SetTexture("theme", themeTextures);
         propBlock.SetTexture("themeCol", themeColors);
         themeColors.Apply();

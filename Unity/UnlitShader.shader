@@ -19,7 +19,7 @@ Shader "Unlit/UnlitShader"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags { "RenderType"="Transparent" "Queue"="Transparent"}
         LOD 100
 
         Pass
@@ -42,6 +42,29 @@ Shader "Unlit/UnlitShader"
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
             };
+
+
+            //WATER TEXTURE loosely based off of https://www.shadertoy.com/view/Mt2SzR
+            float random(float x) { return frac(sin(x) * 10000.); }
+            float noise(float2 p) { return random(p.x + p.y * 10000.); }
+            float2 sw(float2 p) { return float2(floor(p.x), floor(p.y)); }
+            float2 se(float2 p) { return float2(ceil(p.x), floor(p.y)); }
+            float2 nw(float2 p) { return float2(floor(p.x), ceil(p.y)); }
+            float2 ne(float2 p) { return float2(ceil(p.x), ceil(p.y)); }
+            float smoothNoise(float2 p) {
+                float2 interp = smoothstep(0., 1., frac(p));
+                float s = lerp(noise(sw(p)), noise(se(p)), interp.x);
+                float n = lerp(noise(nw(p)), noise(ne(p)), interp.x);
+                return lerp(s, n, interp.y);
+            }
+            float fractalNoise(float2 p) {
+                return (smoothNoise(p)*4+smoothNoise(p*2.)*2+smoothNoise(p*4))/7;
+            }
+            float water(float2 p) {
+                return 0.7+fractalNoise(p + float2(fractalNoise(p+_Time), fractalNoise(p-_Time)))*1.5;
+            }
+
+
 
             sampler2D tex;
 
@@ -83,7 +106,12 @@ Shader "Unlit/UnlitShader"
                 //Get position on color map
                 float sec = lerp((v-frac(v))/layerCount+0.05f,v/layerCount+0.05f,blurLayers);
                 float4 color = lerp(tex2D(themeCol,float2(0,sec)),tex3D(theme,float3(pos.x*512/424,pos.y,sec)),useThemeTex);
-                return color*lineCloseness;
+                //Blend with contour line
+                color = float4(color.rgb*lineCloseness,lerp(color.a,1,1-lineCloseness));
+                //Blend with water
+                color = float4(color.rgb*lerp(water(i.uv*20)*float3(0.25,0.5,1),float3(1,1,1),color.a),1.);
+
+                return color;
             }
             ENDCG
         }
