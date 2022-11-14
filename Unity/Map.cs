@@ -56,10 +56,10 @@ class ThemeLayer
             new ThemeLayer(new Color(0.23f,0.38f,1.0f,5f),"water.png",new Color(1f,1f,1f,0.2f)),//Shallow Ocean
             new ThemeLayer(new Color(0.85f,0.75f,0.57f,1f),"sand.png",new Color(1f,1f,1f,1)),// Beach
             new ThemeLayer(new Color(0.85f,0.75f,0.57f,1f),"sand.png",new Color(1f,1f,1f,1)),// Beach
-            new ThemeLayer(new Color(0.37f,0.53f,0.31f,1f),"grass.png",new Color(1f,1f,1f,1)),// Grass
-            new ThemeLayer(new Color(0.37f,0.53f,0.31f,1f),"grass.png",new Color(1f,1f,1f,1)),// Grass
-            new ThemeLayer(new Color(0.55f,0.55f,0.55f,1f),"rock.png",new Color(1f,1f,1f,1)),// Rock
-            new ThemeLayer(new Color(0.55f,0.55f,0.55f,1f),"rock.png",new Color(1f,1f,1f,1)),// Rock
+            new ThemeLayer(new Color(0.3f,0.5f,0.2f,1f),"grass.png",new Color(1f,1f,1f,1)),// Grass
+            new ThemeLayer(new Color(0.3f,0.5f,0.2f,1f),"grass.png",new Color(1f,1f,1f,1)),// Grass
+            new ThemeLayer(new Color(0.45f,0.45f,0.45f,1f),"rock.png",new Color(1f,1f,1f,1)),// Rock
+            new ThemeLayer(new Color(0.45f,0.45f,0.45f,1f),"rock.png",new Color(1f,1f,1f,1)),// Rock
             new ThemeLayer(new Color(1f,1f,1f,1f),"snow.png",new Color(0.8f,0.8f,0.8f,1)),//Light snow
             new ThemeLayer(new Color(1f,1f,1f,1f),"snow.png",new Color(0.8f,0.8f,0.8f,1)),//Light snow
             new ThemeLayer(new Color(1f,1f,1f,1f),"snow.png",new Color(1f,1f,1f,1)),//Snow
