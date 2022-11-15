@@ -1,4 +1,4 @@
-# Steps for Installing Unity Topographic Sand Map
+# Unity Topographic Sand Map Guide
 
 ## Equipment
 - Cart or table with rim that can hold sand
@@ -9,6 +9,7 @@
 
 Optionally:
 - Various tools (paint scraper, metal spoon...) to sculp the sand with
+- Some tarp underneath to prevent a mess
 
 
 ## Prerequisites
@@ -25,7 +26,17 @@ Optionally:
 9. Press `Ctrl+B` to build.
 
 ## Alignment
-Once you have the program setup with a projector and a Kinect sensor, use these keybindings to align the camera and projector. The program uses coordinates in 3d to map out the base of the table and then each corner has it's own max height. In effect, this makes a hexahedron where the vertical lines are parallel to the depth (because the upper and lower bounds of each corner must be in the same 2d alignment).
+Once you have the program setup with a projector and a Kinect sensor, use these instructions and the keybindings below to align the camera and projector. The program uses coordinates in 3d to map out the base of the table and then each corner has it's own base and max height. In effect, this can project from any hexahedron (solid with 6 quadrilateral sides) where the vertical lines are all parallel.
+
+Steps:
+- Select any corner using `1234`, place your hand in a resting position above the corner parallel to an axis, then adjust it with `wasd` until it lines up. Then turn your hand in the perpendicular direction and adjust again. For any input you may use `left shift` to move faster. Repeat for each corner.
+- Flatten the surface and adjust the minimum height using `r` and `f`, you should see no contour lines (look at the monitor screen to see it more clearly).
+- Find a solid object and place it near each corner, then use `t` and `g` to adjust the maximum height until it is consistent everywhere.
+- Congrats! The table should now be roughly aligned. Press `right shift + s` to save the preset. This preset will be loaded whenever the program is run, or when `right shift + l` is pressed.
+
+## Keybindings
+
+Corner selection:
 
 `Backtick` - Select all corners
 
@@ -37,7 +48,7 @@ Once you have the program setup with a projector and a Kinect sensor, use these 
 
 `4` - Select corner 4
 
----
+Alignment:
 
 `shift` - Increase movement speed
 
@@ -59,8 +70,7 @@ Once you have the program setup with a projector and a Kinect sensor, use these 
 
 ---
 
-## Visual manipulation
-There are also several keybindings to change how the projection looks.
+Visual options:
 
 `c` - Increase contour line opacity by 10% (wraps back to 0% at 100%)
 
