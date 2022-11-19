@@ -20,8 +20,8 @@ static const float gaussian[25] = {
 
 [numthreads(8,8,1)]
 void time_interpolate(uint3 id: SV_DispatchThreadID) {
-    const float oldRatio = 0.85;
-    const float cutoff = 4.0;
+    const float oldRatio = 0.93;
+    const float cutoff = 6.0;
 
     uint2 pos = id.xy;
     float useOld = step(abs(Old[pos].r-Input[pos].r),cutoff) * oldRatio;
@@ -32,7 +32,7 @@ void time_interpolate(uint3 id: SV_DispatchThreadID) {
 [numthreads(8,8,1)]
 void blur (uint3 id : SV_DispatchThreadID)
 {
-    const float cutoff = 3.0;
+    const float cutoff = 7.0;
     uint2 pos = id.xy;
     float cumulative = 0.0;
     float gauss_weight = 0.0;
