@@ -154,6 +154,7 @@ public class Map : MonoBehaviour
     float useTex = 1.0f;
     void SetupShader()
     {
+        Cursor.visible = false;
         propBlock = new MaterialPropertyBlock();
         renderer = GetComponent<Renderer>();
         renderer.GetPropertyBlock(propBlock);
