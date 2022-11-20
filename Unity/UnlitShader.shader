@@ -83,6 +83,8 @@ Shader "Unlit/UnlitShader"
             float4 corner3;
             float4 corner4;
 
+            float texSize = 3.0;
+
             v2f vert (appdata v) {
                 v2f o;
                 o.uv = v.uv;
@@ -90,6 +92,8 @@ Shader "Unlit/UnlitShader"
                 return o;
             }
             float4 frag (v2f i) : SV_Target {
+                float aspect = _ScreenParams.y/_ScreenParams.x;
+                float2 stablePosition = float2(i.uv.x*aspect,i.uv.y);
                 //transform position based on the four corners
                 float4 pos = lerp(lerp(corner2,corner1,i.uv.x),lerp(corner4,corner3,i.uv.x),i.uv.y);
                 //Gaussian blur the sampling
@@ -106,11 +110,11 @@ Shader "Unlit/UnlitShader"
                 float lineCloseness = lerp(1.0,smoothstep(0,1,min(fracv,1-fracv)/dv/lineWidth),contour);
                 //Get position on color map
                 float sec = lerp((v-frac(v))/layerCount+0.05f,v/layerCount+0.05f,blurLayers);
-                float4 color = lerp(tex2D(themeCol,float2(0,sec)),tex3D(theme,float3(pos.x*512/424,pos.y,sec)),useThemeTex);
+                float4 color = lerp(tex2D(themeCol,float2(0,sec)),tex3D(theme,float3(stablePosition*texSize,sec)),useThemeTex);
                 //Blend with contour line
                 color = float4(color.rgb*lineCloseness,lerp(color.a,1,1-lineCloseness));
                 //Blend with water
-                color = float4(color.rgb*lerp(water(i.uv*20)*float3(0.25,0.5,1),float3(1,1,1),color.a),1.);
+                color = float4(color.rgb*lerp(water(stablePosition*20.0)*float3(0.25,0.5,1),float3(1,1,1),color.a),1.);
 
                 return color;
             }
