@@ -27,7 +27,7 @@ class ThemeLayer
     }
     static public Tuple<Texture2D, Texture3D> createTheme(ThemeLayer[] layers)
     {
-        Texture3D tex3d = new Texture3D(512, 512, layers.Length, TextureFormat.RGBA32, 0);
+        Texture3D tex3d = new Texture3D(1024, 1024, layers.Length, TextureFormat.RGBA32, 0);
         List<Color> cols = new List<Color>();
         for (int i = 0; i < layers.Length; i++)
         {
@@ -51,18 +51,18 @@ class ThemeLayer
     //THEMES
     public static ThemeLayer[][] themes = {
         new ThemeLayer[] {
-            new ThemeLayer(new Color(0.23f,0.38f,1.0f,5f),"water.png",new Color(0.6f,0.6f,0.6f,0.2f)),//Deep Ocean
-            new ThemeLayer(new Color(0.23f,0.38f,1.0f,5f),"water.png",new Color(0.8f,0.8f,0.8f,0.2f)),//Ocean
-            new ThemeLayer(new Color(0.23f,0.38f,1.0f,5f),"water.png",new Color(1f,1f,1f,0.2f)),//Shallow Ocean
+            new ThemeLayer(new Color(0.23f,0.38f,1.0f,1f),"water.png",new Color(0.6f,0.6f,0.6f,1f)),//Deep Ocean
+            new ThemeLayer(new Color(0.23f,0.38f,1.0f,1f),"water.png",new Color(0.8f,0.8f,0.8f,1f)),//Ocean
+            new ThemeLayer(new Color(0.23f,0.38f,1.0f,1f),"water.png",new Color(1f,1f,1f,1f)),//Shallow Ocean
             new ThemeLayer(new Color(0.85f,0.75f,0.57f,1f),"sand.png",new Color(1f,1f,1f,1)),// Beach
             new ThemeLayer(new Color(0.85f,0.75f,0.57f,1f),"sand.png",new Color(1f,1f,1f,1)),// Beach
-            new ThemeLayer(new Color(0.3f,0.5f,0.2f,1f),"grass.png",new Color(1f,1f,1f,1)),// Grass
-            new ThemeLayer(new Color(0.3f,0.5f,0.2f,1f),"grass.png",new Color(1f,1f,1f,1)),// Grass
+            new ThemeLayer(new Color(0.38f,0.51f,0.22f,1f),"grass.png",new Color(1f,1f,1f,1)),// Grass
+            new ThemeLayer(new Color(0.38f,0.51f,0.22f,1f),"grass.png",new Color(1f,1f,1f,1)),// Grass
             new ThemeLayer(new Color(0.45f,0.45f,0.45f,1f),"rock.png",new Color(1f,1f,1f,1)),// Rock
             new ThemeLayer(new Color(0.45f,0.45f,0.45f,1f),"rock.png",new Color(1f,1f,1f,1)),// Rock
-            new ThemeLayer(new Color(1f,1f,1f,1f),"snow.png",new Color(0.8f,0.8f,0.8f,1)),//Light snow
-            new ThemeLayer(new Color(1f,1f,1f,1f),"snow.png",new Color(0.8f,0.8f,0.8f,1)),//Light snow
-            new ThemeLayer(new Color(1f,1f,1f,1f),"snow.png",new Color(1f,1f,1f,1)),//Snow
+            new ThemeLayer(new Color(0.9f,0.9f,0.9f,1f),"snow.png",new Color(0.8f,0.8f,0.8f,1)),//Light snow
+            new ThemeLayer(new Color(0.9f,0.9f,0.9f,1f),"snow.png",new Color(0.8f,0.8f,0.8f,1)),//Light snow
+            new ThemeLayer(new Color(0.9f,0.9f,0.9f,1f),"snow.png",new Color(1f,1f,1f,1)),//Snow
         },
         new ThemeLayer[] {
             new ThemeLayer(new Color(0.8f,0.1f,0.1f,1)),//Red
