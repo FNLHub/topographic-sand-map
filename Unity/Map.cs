@@ -347,10 +347,11 @@ public class Map : MonoBehaviour
             ctrl + l - Load alignment
             ctrl + q - Quit
         ");
-        GUI.skin.label.fontSize = (int)(Screen.height / 13);
-        GUI.Label(new Rect(50f, 50f, 50f, 50f), "2");
-        GUI.Label(new Rect(Screen.width - 100f, 50f, 50f, 50f), "1");
-        GUI.Label(new Rect(50f, Screen.height - 100f, 50f, 50f), "4");
-        GUI.Label(new Rect(Screen.width - 100f, Screen.height - 100f, 50f, 50f), "3");
+        float em = (Screen.height/13)+5f;
+        GUI.skin.label.fontSize = (int)(em-5);
+        GUI.Label(new Rect(50f, 50f, em, em), "2");
+        GUI.Label(new Rect(Screen.width - 100f, 50f, em, em), "1");
+        GUI.Label(new Rect(50f, Screen.height - 100f, em, em), "4");
+        GUI.Label(new Rect(Screen.width - 100f, Screen.height - 100f, em, em), "3");
     }
 }
