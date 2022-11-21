@@ -94,7 +94,7 @@ Shader "Unlit/UnlitShader"
             }
             float4 frag (v2f i) : SV_Target {
                 float aspect = _ScreenParams.y/_ScreenParams.x;
-                float2 stablePosition = float2(i.uv.x*aspect,i.uv.y);
+                float2 stablePosition = float2(i.uv.x/aspect,i.uv.y);
                 //transform position based on the four corners
                 float4 pos = lerp(lerp(corner2,corner1,i.uv.x),lerp(corner4,corner3,i.uv.x),i.uv.y);
                 //Gaussian blur the sampling
