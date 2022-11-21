@@ -188,6 +188,9 @@ public class Map : MonoBehaviour
     //ALIGNMENT
     int curCorner = 0;
     bool showHelp = false;
+    bool isDrag = false;
+    UnityEngine.Vector3 dragStart = new UnityEngine.Vector3(0.0f, 0.0f);
+    float[] cornerCoef;
     public UnityEngine.Vector4[] corner = new UnityEngine.Vector4[] {
         new UnityEngine.Vector4(0.165f, 0.0078f, 600f, 150f),
         new UnityEngine.Vector4(1.0168f, 0.004f, 600f, 140f),
@@ -197,7 +200,11 @@ public class Map : MonoBehaviour
     void KeyInput()
     {
         //Help dialogue
-        if (Input.GetKeyDown("h")) showHelp = !showHelp;
+        if (Input.GetKeyDown("h"))
+        {
+            if (showHelp = !showHelp) Cursor.visible = true;
+            else Cursor.visible = false;
+        }
         //Corner control keys
         for (int i = 1; i <= 4; i++) if (Input.GetKeyDown(i.ToString())) curCorner = i;
         //Backtick selects all corners
@@ -211,6 +218,28 @@ public class Map : MonoBehaviour
         if (Input.GetKey("g")) cornerChange.w += 20f;
         if (Input.GetKey("left shift")) cornerChange *= 10;
         editCorners(cornerChange * Time.deltaTime);
+
+        if (Input.GetButtonDown("Fire1"))
+        {
+            isDrag = true;
+            dragStart = Input.mousePosition;
+            float x = (dragStart.x = dragStart.x / Screen.width);
+            float y = (dragStart.y = dragStart.y / Screen.height);
+            cornerCoef = new float[] { x * y, (1 - x) * y, x * (1 - y), (1 - x) * (1 - y) };
+        }
+        if (isDrag)
+        {
+            var pos = Input.mousePosition;
+            pos.x /= Screen.width;
+            pos.y /= Screen.height;
+            var delta = new UnityEngine.Vector4(pos.x - dragStart.x, pos.y - dragStart.y, 0f, 0f);
+            corner[0] += delta * cornerCoef[0];
+            corner[1] += delta * cornerCoef[1];
+            corner[2] += delta * cornerCoef[2];
+            corner[3] += delta * cornerCoef[3];
+            dragStart = pos;
+        }
+        if (Input.GetButtonUp("Fire1")) isDrag = false;
 
         //Visual keys
         if (Input.GetKeyDown("n")) NextTheme();
@@ -347,8 +376,8 @@ public class Map : MonoBehaviour
             ctrl + l - Load alignment
             ctrl + q - Quit
         ");
-        float em = (Screen.height/13)+5f;
-        GUI.skin.label.fontSize = (int)(em-5);
+        float em = (Screen.height / 13) + 5f;
+        GUI.skin.label.fontSize = (int)(em - 5);
         GUI.Label(new Rect(50f, 50f, em, em), "2");
         GUI.Label(new Rect(Screen.width - 100f, 50f, em, em), "1");
         GUI.Label(new Rect(50f, Screen.height - 100f, em, em), "4");
