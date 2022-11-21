@@ -181,14 +181,12 @@ public class Map : MonoBehaviour
         //Just copy input to output (for disabling filters)
         //computeShader.Dispatch(prettify_copy_kernel, 512/8, 424/8, 1);
         RenderTexture.active = prettifyOutput;
-        Graphics.CopyTexture(prettifyOutput,finalTex);
+        Graphics.CopyTexture(prettifyOutput, finalTex);
     }
 
     //ALIGNMENT
     int curCorner = 0;
     bool showHelp = false;
-    bool isDrag = false;
-    UnityEngine.Vector3 dragStart = new UnityEngine.Vector3(0.0f, 0.0f);
     float[] cornerCoef;
     public UnityEngine.Vector4[] corner = new UnityEngine.Vector4[] {
         new UnityEngine.Vector4(0.165f, 0.0078f, 600f, 150f),
@@ -218,27 +216,24 @@ public class Map : MonoBehaviour
         if (Input.GetKey("left shift")) cornerChange *= 10;
         editCorners(cornerChange * Time.deltaTime);
 
+        //Corner dragging
         if (Input.GetButtonDown("Fire1"))
         {
-            isDrag = true;
-            dragStart = Input.mousePosition;
-            float x = (dragStart.x = dragStart.x / Screen.width);
-            float y = (dragStart.y = dragStart.y / Screen.height);
+            Cursor.lockState = CursorLockMode.Confined;
+            float x = (Input.mousePosition.x / Screen.width);
+            float y = (Input.mousePosition.y / Screen.height);
             cornerCoef = new float[] { x * y, (1 - x) * y, x * (1 - y), (1 - x) * (1 - y) };
         }
-        if (isDrag)
+        if (Input.GetButton("Fire1"))
         {
-            var pos = Input.mousePosition;
-            pos.x /= Screen.width;
-            pos.y /= Screen.height;
-            var delta = new UnityEngine.Vector4(pos.x - dragStart.x, pos.y - dragStart.y, 0f, 0f);
+            var delta = new UnityEngine.Vector4(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"), 0f, 0f) * 0.01f;
             corner[0] += delta * cornerCoef[0];
             corner[1] += delta * cornerCoef[1];
             corner[2] += delta * cornerCoef[2];
             corner[3] += delta * cornerCoef[3];
-            dragStart = pos;
         }
-        if (Input.GetButtonUp("Fire1")) isDrag = false;
+        if (Input.GetButtonUp("Fire1"))
+            Cursor.lockState = CursorLockMode.None;
 
         //Visual keys
         if (Input.GetKeyDown("n")) NextTheme();
