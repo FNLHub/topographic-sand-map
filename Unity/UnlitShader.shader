@@ -10,6 +10,7 @@ Shader "Unlit/UnlitShader"
         useThemeTex ("Theme Texture Intensity",Float) = 1
         blurLayers ("Blur Layers", Float) = 0
         layerCount ("Layer Count",Float) = 1
+        texSize ("Texture Scale",Float) = 3.0
 
         corner1("Corner 1",Vector) = (0,0,0,1)
         corner2("Corner 2",Vector) = (1,0,0,1)
@@ -114,7 +115,7 @@ Shader "Unlit/UnlitShader"
                 //Blend with contour line
                 color = float4(color.rgb*lineCloseness,lerp(color.a,1,1-lineCloseness));
                 //Blend with water
-                color = float4(color.rgb*lerp(water(stablePosition*20.0)*float3(0.25,0.5,1),float3(1,1,1),color.a),1.);
+                color = float4(color.rgb*lerp(water(stablePosition*texSize*5.0)*float3(0.25,0.5,1),float3(1,1,1),color.a),1.);
 
                 return color;
             }

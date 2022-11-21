@@ -15,8 +15,8 @@ class ThemeLayer
     {
         Color tint = fileTint ?? new Color(1f, 1f, 1f, 1f);
         col = mainCol * tint;
-        if (file == "white.png" && tint.a==1f) tint = col;
-        tex = new Color[512 * 512];
+        if (file == "white.png" && tint.a == 1f) tint = col;
+        tex = new Color[1024 * 1024];
         Texture2D tex2d = new Texture2D(2, 2);
         tex2d.LoadImage(File.ReadAllBytes("Assets/topographic-sand-map/Textures/" + file));
         tex = tex2d.GetPixels();
@@ -98,7 +98,7 @@ public class Map : MonoBehaviour
     }
 
     int curTheme = -1;
-    Texture3D themeTextures;
+    public Texture3D themeTextures;
     Texture2D themeColors;
     void NextTheme()
     {
@@ -167,7 +167,7 @@ public class Map : MonoBehaviour
     }
     void ProcessFrame()
     {
-        var size = sensor.DepthFrameSource.FrameDescription.LengthInPixels;
+        var size = useKinect ? sensor.DepthFrameSource.FrameDescription.LengthInPixels : 512 * 424;
         Color[] colors = new Color[size];
         for (int i = 0; i < size; i++)
             colors[i] = new Color(frameData[i], frameData[i], frameData[i], 1.0f);
@@ -259,17 +259,42 @@ public class Map : MonoBehaviour
     //KINECT INTERFACE
     private KinectSensor sensor;
     private DepthFrameReader reader;
-    private ushort[] frameData;
+    public ushort[] frameData;
+    private bool useKinect = true;
     void SetupKinect()
     {
         sensor = KinectSensor.GetDefault();
-        if (sensor == null) { Debug.LogError("Camera not found"); return; }
+        if (sensor == null) goto noCamera;
         sensor.Open();
         reader = sensor.DepthFrameSource.OpenReader();
+        if (!sensor.IsAvailable) goto noCamera;
         frameData = new ushort[sensor.DepthFrameSource.FrameDescription.LengthInPixels];
+        return;
+
+    noCamera:
+        Debug.LogError("Camera not found");
+        useKinect = false;
+        frameData = new ushort[512 * 424];
+        return;
     }
     void ReadFrame()
     {
+        //Read "fake frame" if Kinect is not connected
+        if (useKinect == false)
+        {
+            if (frameData[0] == 0)
+            {
+                Color[] tex = new Color[512 * 424];
+                Texture2D tex2d = new Texture2D(2, 2);
+                tex2d.LoadImage(File.ReadAllBytes("Assets/topographic-sand-map/Textures/default_map.png"));
+                tex = tex2d.GetPixels();
+                for (int i = 0; i < 512 * 424; i++)
+                {
+                    frameData[i] = (ushort)(700 - (ushort)(tex[i].r * 200));
+                }
+            }
+            if (Time.frameCount % 3 == 0) ProcessFrame();
+        }
         if (reader == null) return;
         var frame = reader.AcquireLatestFrame();
         if (frame == null) return;
