@@ -240,7 +240,8 @@ public class Map : MonoBehaviour
             corner[0].x,corner[0].y,corner[0].z,corner[0].w,
             corner[1].x,corner[1].y,corner[1].z,corner[1].w,
             corner[2].x,corner[2].y,corner[2].z,corner[2].w,
-            corner[3].x,corner[3].y,corner[3].z,corner[3].w
+            corner[3].x,corner[3].y,corner[3].z,corner[3].w,
+            useContour,blurLayers,useTex
         });
         file.Close();
         Debug.Log("Saved to: " + Application.persistentDataPath);
@@ -251,11 +252,18 @@ public class Map : MonoBehaviour
         FileStream file;
         if (File.Exists(presetDest)) file = File.OpenRead(presetDest);
         else { Debug.LogError("File not found"); return; }
-        float[] dat = (float[])new BinaryFormatter().Deserialize(file);
+        List<float> dat = new List<float>((float[])(new BinaryFormatter().Deserialize(file)));
+        if(dat.Count<=19) dat.AddRange(new [] {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f});
         corner[0] = new UnityEngine.Vector4(dat[0], dat[1], dat[2], dat[3]);
         corner[1] = new UnityEngine.Vector4(dat[4], dat[5], dat[6], dat[7]);
         corner[2] = new UnityEngine.Vector4(dat[8], dat[9], dat[10], dat[11]);
         corner[3] = new UnityEngine.Vector4(dat[12], dat[13], dat[14], dat[15]);
+        useContour = dat[16];
+        blurLayers = dat[17];
+        useTex = dat[18];
+        propBlock.SetFloat("contour", (useContour = dat[16]));
+        propBlock.SetFloat("blurLayers", (blurLayers = dat[17]));
+        propBlock.SetFloat("useThemeTex", (useTex = dat[18]));
         file.Close();
     }
 
