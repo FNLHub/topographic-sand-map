@@ -1,28 +1,15 @@
-// Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel blur
 #pragma kernel time_interpolate
 #pragma kernel copy_result
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
 RWTexture2D<float4> Result;
 RWTexture2D<float4> Input;
 RWTexture2D<float4> Old;
-
-static const float gaussian[25] = {
-    1.0,  4.0,  7.0,  4.0, 1.0,
-    4.0, 16.0, 26.0, 16.0, 4.0,
-    7.0, 26.0, 41.0, 26.0, 7.0,
-    4.0, 16.0, 26.0, 16.0, 4.0,
-    1.0,  4.0,  7.0,  4.0, 1.0
-};
-
 
 [numthreads(8,8,1)]
 void time_interpolate(uint3 id: SV_DispatchThreadID) {
     const float oldRatio = 0.93;
     const float cutoff = 6.0;
-
     uint2 pos = id.xy;
     float useOld = step(abs(Old[pos].r-Input[pos].r),cutoff) * oldRatio;
     Input[pos] = lerp(Input[pos],Old[pos],useOld);
@@ -32,19 +19,24 @@ void time_interpolate(uint3 id: SV_DispatchThreadID) {
 [numthreads(8,8,1)]
 void blur (uint3 id : SV_DispatchThreadID)
 {
-    const float cutoff = 7.0;
-    uint2 pos = id.xy;
-    float cumulative = 0.0;
-    float gauss_weight = 0.0;
-    uint2 base_pos = pos - uint2(2,2);
-    float cur = Input[pos].r;
+    float tot = Input[id.xy + uint2(0,-2)].r * 7;
 
-    for(uint i=0;i<25;i++) {
-        float gauss = gaussian[i] * step(abs(Input[pos].r-cur),4.0);
-        gauss_weight += gauss;
-        cumulative += Input[base_pos + uint2(i%5,i/5)].r * gauss;
-    }
-    Result[pos] = cumulative / gauss_weight;
+    tot += Input[id.xy + uint2(-1,-1)].r * 16;
+    tot += Input[id.xy + uint2(0,-1)].r * 26;
+    tot += Input[id.xy + uint2(1,-1)].r * 16;
+
+    tot += Input[id.xy + uint2(-2,0)].r * 7;
+    tot += Input[id.xy + uint2(-1,0)].r * 26;
+    tot += Input[id.xy + uint2(0,0)].r * 41;
+    tot += Input[id.xy + uint2(1,0)].r * 26;
+    tot += Input[id.xy + uint2(2,0)].r * 7;
+
+    tot += Input[id.xy + uint2(-1,1)].r * 16;
+    tot += Input[id.xy + uint2(0,1)].r * 26;
+    tot += Input[id.xy + uint2(1,1)].r * 16;
+
+    tot += Input[id.xy + uint2(0,2)].r * 7;
+    Result[id.xy] = tot / 237;
 }
 
 [numthreads(8,8,1)]
