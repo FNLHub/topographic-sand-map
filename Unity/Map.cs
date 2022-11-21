@@ -212,10 +212,10 @@ public class Map : MonoBehaviour
         //WASD and arrow keys translate the viewport
         UnityEngine.Vector4 cornerChange =
             new UnityEngine.Vector4(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0, 0) * 0.03f;
-        if (Input.GetKey("r")) cornerChange.z -= 20f;
-        if (Input.GetKey("f")) cornerChange.z += 20f;
-        if (Input.GetKey("t")) cornerChange.w -= 20f;
-        if (Input.GetKey("g")) cornerChange.w += 20f;
+        if (Input.GetKey("r")) cornerChange.z += 20f;
+        if (Input.GetKey("f")) cornerChange.z -= 20f;
+        if (Input.GetKey("t")) cornerChange.w += 20f;
+        if (Input.GetKey("g")) cornerChange.w -= 20f;
         if (Input.GetKey("left shift")) cornerChange *= 10;
         editCorners(cornerChange * Time.deltaTime);
 
