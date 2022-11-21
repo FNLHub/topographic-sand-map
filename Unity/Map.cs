@@ -187,6 +187,7 @@ public class Map : MonoBehaviour
 
     //ALIGNMENT
     int curCorner = 0;
+    bool showHelp = false;
     public UnityEngine.Vector4[] corner = new UnityEngine.Vector4[] {
         new UnityEngine.Vector4(0.165f, 0.0078f, 600f, 150f),
         new UnityEngine.Vector4(1.0168f, 0.004f, 600f, 140f),
@@ -195,6 +196,8 @@ public class Map : MonoBehaviour
     };
     void KeyInput()
     {
+        //Help dialogue
+        if(Input.GetKeyDown("h")) showHelp = !showHelp;
         //Corner control keys
         for (int i = 1; i <= 4; i++) if (Input.GetKeyDown(i.ToString())) curCorner = i;
         //Backtick selects all corners
@@ -311,28 +314,30 @@ public class Map : MonoBehaviour
     //GUI
     void OnGUI()
     {
-        if (Input.GetKey("h"))
-        {
-            GUI.skin.label.fontSize = (int)(Screen.height / 26);
-            GUI.Label(new Rect(0.0f, 0.0f, Screen.width, Screen.height), @"
-                H - show help
-                C - change contour line opacity
-                B - blur layers
-                N - change layer design
+        if(!showHelp) return;
+        GUI.skin.label.fontSize = (int)(Screen.height / 26);
+        GUI.Label(new Rect(100.0f, 0.0f, Screen.width-100.0f, Screen.height), @"
+            H - show help
+            C - change contour line opacity
+            B - blur layers
+            N - change layer design
 
-                Corner manipulation:
-                Shift - increase speed
-                1234 - select corner
-                ` - select all corners
-                WASD - Move
-                R - raise base
-                F - lower base
-                T - raise max
-                G - lower max
-                left shift + s - Save alignment
-                left shift + l - Load alignment
-            ");
-        }
+            Corner manipulation:
+            Shift - increase speed
+            1234 - select corner
+            ` - select all corners
+            WASD - Move
+            R - raise base
+            F - lower base
+            T - raise max
+            G - lower max
+            left shift + s - Save alignment
+            left shift + l - Load alignment
+        ");
+        GUI.skin.label.fontSize = (int)(Screen.height / 13);
+        GUI.Label(new Rect(50f,50f,50f,50f),"2");
+        GUI.Label(new Rect(Screen.width-100f,50f,50f,50f),"1");
+        GUI.Label(new Rect(50f,Screen.height-100f,50f,50f),"4");
+        GUI.Label(new Rect(Screen.width-100f,Screen.height-100f,50f,50f),"3");
     }
-
 }
