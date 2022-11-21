@@ -6,16 +6,16 @@ Shader "Unlit/UnlitShader"
         theme ("Theme texture", 3D) = "white" {}
         themeCol ("Theme colors", 2D) = "white" {}
         lineWidth ("Line Width", Float) = 10
-        contour ("Contour Intensity", Float) = 1
-        useThemeTex ("Theme Texture Intensity",Float) = 1
-        blurLayers ("Blur Layers", Float) = 0
-        layerCount ("Layer Count",Float) = 1
+        [HideInInspector]contour ("Contour Intensity", Float) = 1
+        [HideInInspector]useThemeTex ("Theme Texture Intensity",Float) = 1
+        [HideInInspector]blurLayers ("Blur Layers", Float) = 0
+        [HideInInspector]layerCount ("Layer Count",Float) = 1
         texSize ("Texture Scale",Float) = 3.0
 
-        corner1("Corner 1",Vector) = (0,0,0,1)
-        corner2("Corner 2",Vector) = (1,0,0,1)
-        corner3("Corner 3",Vector) = (0,1,0,1)
-        corner4("Corner 4",Vector) = (1,1,0,1)
+        [HideInInspector]corner1("Corner 1",Vector) = (0,0,0,1)
+        [HideInInspector]corner2("Corner 2",Vector) = (1,0,0,1)
+        [HideInInspector]corner3("Corner 3",Vector) = (0,1,0,1)
+        [HideInInspector]corner4("Corner 4",Vector) = (1,1,0,1)
 
     }
     SubShader

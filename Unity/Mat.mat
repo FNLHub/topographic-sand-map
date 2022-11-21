@@ -100,6 +100,7 @@ Material:
     - lineCount: 9.79
     - lineWidth: 14
     - rawDepth: 0
+    - texSize: 3
     - useThemeTex: 0.47
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

@@ -98,7 +98,7 @@ public class Map : MonoBehaviour
     }
 
     int curTheme = -1;
-    public Texture3D themeTextures;
+    Texture3D themeTextures;
     Texture2D themeColors;
     void NextTheme()
     {
@@ -188,7 +188,7 @@ public class Map : MonoBehaviour
     int curCorner = 0;
     bool showHelp = false;
     float[] cornerCoef;
-    public UnityEngine.Vector4[] corner = new UnityEngine.Vector4[] {
+    UnityEngine.Vector4[] corner = new UnityEngine.Vector4[] {
         new UnityEngine.Vector4(0.165f, 0.0078f, 600f, 150f),
         new UnityEngine.Vector4(1.0168f, 0.004f, 600f, 140f),
         new UnityEngine.Vector4(0.1556f, 0.41f, 500f, 100f),
@@ -297,7 +297,7 @@ public class Map : MonoBehaviour
     //KINECT INTERFACE
     private KinectSensor sensor;
     private DepthFrameReader reader;
-    public ushort[] frameData;
+    private ushort[] frameData;
     private bool useKinect = true;
     void SetupKinect()
     {
