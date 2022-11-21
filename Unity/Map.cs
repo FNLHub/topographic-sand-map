@@ -181,8 +181,7 @@ public class Map : MonoBehaviour
         //Just copy input to output (for disabling filters)
         //computeShader.Dispatch(prettify_copy_kernel, 512/8, 424/8, 1);
         RenderTexture.active = prettifyOutput;
-        finalTex.ReadPixels(new Rect(0, 0, 512, 424), 0, 0);
-        finalTex.Apply();
+        Graphics.CopyTexture(prettifyOutput,finalTex);
     }
 
     //ALIGNMENT
