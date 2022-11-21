@@ -61,7 +61,7 @@ Shader "Unlit/UnlitShader"
                 return (smoothNoise(p)*4+smoothNoise(p*2.)*2+smoothNoise(p*4))/7;
             }
             float water(float2 p) {
-                float t=_Time*1.7;
+                float t=_Time.y/2.0;
                 return 0.7+fractalNoise(p + float2(fractalNoise(p+t), fractalNoise(p-t)))*2.0;
             }
 
