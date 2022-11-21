@@ -27,7 +27,7 @@ class ThemeLayer
     }
     static public Tuple<Texture2D, Texture3D> createTheme(ThemeLayer[] layers)
     {
-        Texture3D tex3d = new Texture3D(1024, 1024, layers.Length, TextureFormat.RGBA32, 0);
+        Texture3D tex3d = new Texture3D(1024, 1024, layers.Length, TextureFormat.RGBA32, 1);
         List<Color> cols = new List<Color>();
         for (int i = 0; i < layers.Length; i++)
         {
