@@ -355,9 +355,12 @@ public class Map : MonoBehaviour
     //GUI
     void OnGUI()
     {
+        GUI.backgroundColor = Color.clear;
         if (!showHelp) return;
-        GUI.skin.label.fontSize = (int)(Screen.height / 26);
-        GUI.Label(new Rect(100.0f, 0.0f, Screen.width - 100.0f, Screen.height), @"
+        float em = Screen.height / 26;
+        GUI.skin.label.alignment = TextAnchor.UpperLeft;
+        GUI.skin.label.fontSize = (int)(em);
+        GUI.Label(new Rect(2 * em, 0.0f, Screen.width / 2, Screen.height), @"
             H - show help
             C - change contour line opacity
             B - blur layers
@@ -377,18 +380,29 @@ public class Map : MonoBehaviour
             ctrl + q - Quit
         ");
         //Draw corner labels
-        float em = (Screen.height / 13) + 5f;
+        GUI.skin.label.alignment = TextAnchor.UpperCenter;
+        em = (Screen.height / 13) + 5f;
+        GUIStyle posText = new GUIStyle(GUI.skin.label);
+        posText.fontSize = Screen.height / 40;
         GUI.skin.label.fontSize = (int)(em - 5);
         GUIStyle normal = new GUIStyle(GUI.skin.label);
-        GUIStyle highlight = new GUIStyle(GUI.skin.label);
+        GUIStyle highlight = new GUIStyle(normal);
         highlight.normal.textColor = Color.magenta;
         for (int i = 0; i < 4; i++)
         {
+            Rect pos = new Rect(i % 2 == 0 ? Screen.width - em*2 : em, i / 2 == 0 ? em : Screen.height - em*2, em, em*1.5f);
             GUI.Label(
-                new Rect(i % 2 == 0 ? Screen.width - 100f : 50f, i / 2 == 0 ? 50f : Screen.height - 100f, em, em),//Position
+                pos,
                 (i + 1).ToString(),//Text
                 (curCorner == 0 || curCorner == i + 1) ? highlight : normal//Coloring
             );
+            pos.xMin -= em;
+            pos.xMax += em;
+            pos.yMin += em;
+            pos.yMax += em;
+            GUI.Label(pos,
+                "(" + corner[i].x.ToString("0.000") + "," + corner[i].y.ToString("0.000") + ")\n" +
+                corner[i].z.ToString("0") + "-" + corner[i].w.ToString("0"), posText);
         }
     }
 }
