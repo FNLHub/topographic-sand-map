@@ -197,7 +197,7 @@ public class Map : MonoBehaviour
     void KeyInput()
     {
         //Help dialogue
-        if(Input.GetKeyDown("h")) showHelp = !showHelp;
+        if (Input.GetKeyDown("h")) showHelp = !showHelp;
         //Corner control keys
         for (int i = 1; i <= 4; i++) if (Input.GetKeyDown(i.ToString())) curCorner = i;
         //Backtick selects all corners
@@ -218,9 +218,12 @@ public class Map : MonoBehaviour
         if (Input.GetKeyDown("b")) propBlock.SetFloat("blurLayers", (blurLayers = (blurLayers + 0.1f) % 1.1f));
         if (Input.GetKeyDown("x")) propBlock.SetFloat("useThemeTex", (useTex = (useTex + 0.1f) % 1.1f));
 
-        if (Input.GetKey("right shift") && Input.GetKey("s")) SavePreset();
-        if (Input.GetKey("right shift") && Input.GetKey("l")) LoadPreset();
-        if (Input.GetKey("left ctrl") && Input.GetKey("q")) Application.Quit();
+        if (Input.GetKey("left ctrl"))
+        {
+            if (Input.GetKeyDown("s")) SavePreset();
+            if (Input.GetKeyDown("l")) LoadPreset();
+            if (Input.GetKeyDown("q")) Application.Quit();
+        }
     }
     //Shift corners by a linear amount
     void editCorners(UnityEngine.Vector4 shift)
@@ -254,7 +257,7 @@ public class Map : MonoBehaviour
         if (File.Exists(presetDest)) file = File.OpenRead(presetDest);
         else { Debug.LogError("File not found"); return; }
         List<float> dat = new List<float>((float[])(new BinaryFormatter().Deserialize(file)));
-        if(dat.Count<=19) dat.AddRange(new [] {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f});
+        if (dat.Count <= 19) dat.AddRange(new[] { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
         corner[0] = new UnityEngine.Vector4(dat[0], dat[1], dat[2], dat[3]);
         corner[1] = new UnityEngine.Vector4(dat[4], dat[5], dat[6], dat[7]);
         corner[2] = new UnityEngine.Vector4(dat[8], dat[9], dat[10], dat[11]);
@@ -323,9 +326,9 @@ public class Map : MonoBehaviour
     //GUI
     void OnGUI()
     {
-        if(!showHelp) return;
+        if (!showHelp) return;
         GUI.skin.label.fontSize = (int)(Screen.height / 26);
-        GUI.Label(new Rect(100.0f, 0.0f, Screen.width-100.0f, Screen.height), @"
+        GUI.Label(new Rect(100.0f, 0.0f, Screen.width - 100.0f, Screen.height), @"
             H - show help
             C - change contour line opacity
             B - blur layers
@@ -340,14 +343,14 @@ public class Map : MonoBehaviour
             F - lower base
             T - raise max
             G - lower max
-            left shift + s - Save alignment
-            left shift + l - Load alignment
+            ctrl + s - Save alignment
+            ctrl + l - Load alignment
             ctrl + q - Quit
         ");
         GUI.skin.label.fontSize = (int)(Screen.height / 13);
-        GUI.Label(new Rect(50f,50f,50f,50f),"2");
-        GUI.Label(new Rect(Screen.width-100f,50f,50f,50f),"1");
-        GUI.Label(new Rect(50f,Screen.height-100f,50f,50f),"4");
-        GUI.Label(new Rect(Screen.width-100f,Screen.height-100f,50f,50f),"3");
+        GUI.Label(new Rect(50f, 50f, 50f, 50f), "2");
+        GUI.Label(new Rect(Screen.width - 100f, 50f, 50f, 50f), "1");
+        GUI.Label(new Rect(50f, Screen.height - 100f, 50f, 50f), "4");
+        GUI.Label(new Rect(Screen.width - 100f, Screen.height - 100f, 50f, 50f), "3");
     }
 }
