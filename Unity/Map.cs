@@ -357,28 +357,31 @@ public class Map : MonoBehaviour
     {
         GUI.backgroundColor = Color.clear;
         if (!showHelp) return;
-        float em = Screen.height / 26;
+        float em = Screen.height / 20;
         GUI.skin.label.alignment = TextAnchor.UpperLeft;
         GUI.skin.label.fontSize = (int)(em);
-        GUI.Label(new Rect(2 * em, 0.0f, Screen.width / 2, Screen.height), @"
-            H - show help
-            C - change contour line opacity
-            B - blur layers
-            N - change layer design
-
-            Corner manipulation:
-            Shift - increase speed
-            1234 - select corner
-            ` - select all corners
-            WASD - Move
-            R - raise base
-            F - lower base
-            T - raise max
-            G - lower max
-            ctrl + s - Save alignment
-            ctrl + l - Load alignment
-            ctrl + q - Quit
-        ");
+        GUI.Label(new Rect(5 * em, em * 2, Screen.width / 3, Screen.height),
+            "H - toggle help" +
+            "\nN - change layer design" +
+            "\n" +
+            "\nShift - increase speed" +
+            "\n1234 - select corner" +
+            "\n` - select all corners" +
+            "\nWASD - move" +
+            "\nMouse drag - move" +
+            "\nR - raise base" +
+            "\nF - lower base" +
+            "\nT - raise max" +
+            "\nG - lower max"
+        );
+        GUI.Label(new Rect(Screen.width - 15 * em, em * 2, Screen.width / 3, Screen.height - 10f),
+            "(C) Contour: " + useContour.ToString("0.000") +
+            "\n(B) Blur: " + blurLayers.ToString("0.000") +
+            "\n(X) Texture: " + useTex.ToString("0.000") +
+            "\n\n" +
+            "ctrl + S - Save state" +
+            "\nctrl + L - Load state" +
+            "\nctrl + Q - Quit");
         //Draw corner labels
         GUI.skin.label.alignment = TextAnchor.UpperCenter;
         em = (Screen.height / 13) + 5f;
@@ -390,7 +393,7 @@ public class Map : MonoBehaviour
         highlight.normal.textColor = Color.magenta;
         for (int i = 0; i < 4; i++)
         {
-            Rect pos = new Rect(i % 2 == 0 ? Screen.width - em*2 : em, i / 2 == 0 ? em : Screen.height - em*2, em, em*1.5f);
+            Rect pos = new Rect(i % 2 == 0 ? Screen.width - em * 2 : em, i / 2 == 0 ? em : Screen.height - em * 2, em, em * 1.5f);
             GUI.Label(
                 pos,
                 (i + 1).ToString(),//Text
