@@ -59,11 +59,12 @@ Shader "Unlit/UnlitShader"
                 return lerp(s, n, interp.y);
             }
             float fractalNoise(float2 p) {
-                return (smoothNoise(p)*4+smoothNoise(p*2.)*2+smoothNoise(p*4))/7;
+                return (smoothNoise(p)*2+smoothNoise(p*1.5)*3)/5;
             }
             float water(float2 p) {
-                float t=_Time.y/2.0;
-                return 0.7+fractalNoise(p + float2(fractalNoise(p+t), fractalNoise(p-t)))*2.0;
+                p*=3;
+                float t = _Time.y*1.4;
+                return 1.3+fractalNoise(p + float2(smoothNoise(p+float2(sin(t),cos(t))), smoothNoise(p-float2(sin(t),cos(t)))))*0.8;
             }
 
 
@@ -115,7 +116,7 @@ Shader "Unlit/UnlitShader"
                 //Blend with contour line
                 color = float4(color.rgb*lineCloseness,lerp(color.a,1,1-lineCloseness));
                 //Blend with water
-                color = float4(color.rgb*lerp(water(stablePosition*texSize*5.0)*float3(0.25,0.5,1),float3(1,1,1),color.a),1.);
+                color = float4(color.rgb*lerp(water(stablePosition*texSize)*float3(0.25,0.5,1),float3(1,1,1),color.a),1.);
 
                 return color;
             }
