@@ -376,11 +376,19 @@ public class Map : MonoBehaviour
             ctrl + l - Load alignment
             ctrl + q - Quit
         ");
+        //Draw corner labels
         float em = (Screen.height / 13) + 5f;
         GUI.skin.label.fontSize = (int)(em - 5);
-        GUI.Label(new Rect(50f, 50f, em, em), "2");
-        GUI.Label(new Rect(Screen.width - 100f, 50f, em, em), "1");
-        GUI.Label(new Rect(50f, Screen.height - 100f, em, em), "4");
-        GUI.Label(new Rect(Screen.width - 100f, Screen.height - 100f, em, em), "3");
+        GUIStyle normal = new GUIStyle(GUI.skin.label);
+        GUIStyle highlight = new GUIStyle(GUI.skin.label);
+        highlight.normal.textColor = Color.magenta;
+        for (int i = 0; i < 4; i++)
+        {
+            GUI.Label(
+                new Rect(i % 2 == 0 ? Screen.width - 100f : 50f, i / 2 == 0 ? 50f : Screen.height - 100f, em, em),//Position
+                (i + 1).ToString(),//Text
+                (curCorner == 0 || curCorner == i + 1) ? highlight : normal//Coloring
+            );
+        }
     }
 }
