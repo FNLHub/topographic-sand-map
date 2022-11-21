@@ -220,6 +220,7 @@ public class Map : MonoBehaviour
 
         if (Input.GetKey("right shift") && Input.GetKey("s")) SavePreset();
         if (Input.GetKey("right shift") && Input.GetKey("l")) LoadPreset();
+        if (Input.GetKey("left ctrl") && Input.GetKey("q")) Application.Quit();
     }
     //Shift corners by a linear amount
     void editCorners(UnityEngine.Vector4 shift)
@@ -341,6 +342,7 @@ public class Map : MonoBehaviour
             G - lower max
             left shift + s - Save alignment
             left shift + l - Load alignment
+            ctrl + q - Quit
         ");
         GUI.skin.label.fontSize = (int)(Screen.height / 13);
         GUI.Label(new Rect(50f,50f,50f,50f),"2");
