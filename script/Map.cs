@@ -246,6 +246,14 @@ public class Map : MonoBehaviour
             if (Input.GetKeyDown("s")) SavePreset();
             if (Input.GetKeyDown("l")) LoadPreset();
             if (Input.GetKeyDown("q")) Application.Quit();
+            //Reset layout
+            if (Input.GetKeyDown("r"))
+            {
+                corner[0] = new UnityEngine.Vector4(0.0f, 0.0f, 800f, 600f);
+                corner[1] = new UnityEngine.Vector4(1.0f, 0.0f, 800f, 600f);
+                corner[2] = new UnityEngine.Vector4(0.0f, 1.0f, 800f, 600f);
+                corner[3] = new UnityEngine.Vector4(1.0f, 1.0f, 800f, 600f);
+            }
         }
     }
     //Shift corners by a linear amount
@@ -400,6 +408,7 @@ public class Map : MonoBehaviour
             "\n\n" +
             "ctrl + S - Save state" +
             "\nctrl + L - Load state" +
+            "\nctrl + R - Reset layout" +
             "\nctrl + Q - Quit");
         //Draw corner labels
         GUI.skin.label.alignment = TextAnchor.UpperCenter;
