@@ -1,3 +1,4 @@
 .vscode
 **.png.meta
+!cursor.png.meta
 **.md.meta

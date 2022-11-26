@@ -154,7 +154,7 @@ public class Map : MonoBehaviour
     float useTex = 1.0f;
     void SetupShader()
     {
-        Cursor.visible = false;
+        StartCoroutine(SetCursor());
         propBlock = new MaterialPropertyBlock();
         renderer = GetComponent<Renderer>();
         renderer.GetPropertyBlock(propBlock);
@@ -347,6 +347,12 @@ public class Map : MonoBehaviour
     }
 
     //GUI
+    public Texture2D cursorTex;
+    IEnumerator SetCursor() {
+        yield return new WaitForSeconds(.1f);
+        Cursor.visible = false;
+        Cursor.SetCursor(cursorTex,new UnityEngine.Vector2(16f,16f),CursorMode.ForceSoftware);
+    }
     void OnGUI()
     {
         GUI.backgroundColor = Color.clear;
