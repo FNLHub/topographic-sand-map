@@ -348,13 +348,23 @@ public class Map : MonoBehaviour
 
     //GUI
     public Texture2D cursorTex;
-    IEnumerator SetCursor() {
+    IEnumerator SetCursor()
+    {
         yield return new WaitForSeconds(.1f);
         Cursor.visible = false;
-        Cursor.SetCursor(cursorTex,new UnityEngine.Vector2(16f,16f),CursorMode.ForceSoftware);
+        Cursor.SetCursor(cursorTex, new UnityEngine.Vector2(16f, 16f), CursorMode.ForceSoftware);
     }
     void OnGUI()
     {
+        if (useKinect && !sensor.IsAvailable)
+        {
+            float font = Screen.height / 11;
+            GUI.skin.label.fontSize = (int)(font);
+            GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+            GUI.Label(new Rect(Screen.width / 8f, font, Screen.width * 0.75f, font * 9),
+                "The sensor has disconnected. If it doesn't reconnect within 10 seconds, power-cycle the sensor and check all cables. If this happens again, hit Ctrl+S to save alignment and restart the computer.");
+            return;
+        }
         GUI.backgroundColor = Color.clear;
         if (!showHelp) return;
         float em = Screen.height / 20;
