@@ -365,11 +365,20 @@ public class Map : MonoBehaviour
                 "The sensor has disconnected. If it doesn't reconnect within 10 seconds, power-cycle the sensor and check all cables. If this happens again, hit Ctrl+S to save alignment and restart the computer.");
             return;
         }
-        GUI.backgroundColor = Color.clear;
         if (!showHelp) return;
         float em = Screen.height / 20;
         GUI.skin.label.alignment = TextAnchor.UpperLeft;
         GUI.skin.label.fontSize = (int)(em);
+
+        //Show depth at cursor
+        float widthFactor = Screen.height / 10.8f * 22.94f / Screen.width;
+        float x = (Input.mousePosition.x / Screen.width - 0.5f) / widthFactor + 0.5f;
+        float y = 1.0f - (Input.mousePosition.y / Screen.height);
+        UnityEngine.Vector4 c = (corner[3] * (1 - x) + corner[2] * x) * y + (corner[1] * (1 - x) + corner[0] * x) * (1 - y);
+        ushort depth = frameData[(int)((c.x - Mathf.Floor(c.x)) * 512) + (int)((c.y - Mathf.Floor(c.y)) * 424) * 512];
+        GUI.Label(new Rect(Input.mousePosition.x + 10f, Screen.height - Input.mousePosition.y + 10f, em * 3, em * 1.3f), depth.ToString("000"));
+
+        //Main help guide
         GUI.Label(new Rect(5 * em, em * 2, Screen.width / 3, Screen.height),
             "H - toggle help" +
             "\nN - change layer design" +
