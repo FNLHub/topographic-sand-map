@@ -11,6 +11,7 @@ Features:
 ![](Example.png)
 
 The installation guide can be read here: [Unity Topo Sand Map Installation](Unity.md).
+If you would like to print out a usage guide, a template can be found here: [Usage template](https://docs.google.com/document/d/1PeV7TJXtiisWk1MjWxcuHAWilxO1KAcwr_s8edOt2D0/edit?usp=sharing).
 
 This project was created at [Friday Night Lab](https://www.fnlhub.com/) at College of the Sequoias.
 
