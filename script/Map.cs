@@ -340,6 +340,7 @@ public class Map : MonoBehaviour
                 }
             }
             if (Time.frameCount % 3 == 0) ProcessFrame();
+            return;
         }
         if (reader == null) return;
         var frame = reader.AcquireLatestFrame();
