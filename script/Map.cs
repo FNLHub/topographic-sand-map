@@ -325,6 +325,7 @@ public class Map : MonoBehaviour
     }
     void ReadFrame()
     {
+        if (sensor.IsAvailable) useKinect = true;
         //Read "fake frame" if Kinect is not connected
         if (useKinect == false)
         {
